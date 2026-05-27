@@ -1,0 +1,32 @@
+name: Fcg.Identity Delivery To AKS
+
+on:
+  workflow_run:
+    workflows: ["Fcg.Identity CI"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    uses: group10-tc-01/fcg-pipelines/.github/workflows/dotnet-service-delivery.yml@main
+    with:
+      service_name: fcg-identity
+      image_name: fcg-identity
+      dockerfile_path: src/Fcg.Identity.WebApi/Dockerfile
+      docker_context: .
+      azure_container_registry_name: ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}
+      aks_resource_group: ${{ vars.AKS_RESOURCE_GROUP }}
+      aks_cluster_name: ${{ vars.AKS_CLUSTER_NAME }}
+      k8s_namespace: fcg-identity
+      k8s_deployment_name: fcg-identity
+      k8s_container_name: fcg-identity
+      k8s_manifests_path: ""
+      environment: production
+      healthcheck_url: ""
+    secrets: inherit

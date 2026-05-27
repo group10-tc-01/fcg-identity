@@ -1,0 +1,24 @@
+using Fcg.Identity.Domain.Abstractions;
+using Fcg.Identity.Domain.Items;
+using Fcg.Identity.Infrastructure.SqlServer.Persistence;
+using Fcg.Identity.Infrastructure.SqlServer.Persistence.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Fcg.Identity.Infrastructure.SqlServer.DependencyInjection;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddSqlServerInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddDbContext<CleanApiDbContext>(options =>
+            options.UseSqlServer(configuration.GetConnectionString("SqlServer")));
+
+        services.AddScoped<IItemRepository, ItemRepository>();
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CleanApiDbContext>());
+        services.AddHealthChecks().AddDbContextCheck<CleanApiDbContext>("sqlserver");
+
+        return services;
+    }
+}

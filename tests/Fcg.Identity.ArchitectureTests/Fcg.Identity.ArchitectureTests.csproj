@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Fcg.Identity.Application\Fcg.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\src\Fcg.Identity.Domain\Fcg.Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Fcg.Identity.Infrastructure.Auth\Fcg.Identity.Infrastructure.Auth.csproj" />
+    <ProjectReference Include="..\..\src\Fcg.Identity.Infrastructure.Http\Fcg.Identity.Infrastructure.Http.csproj" />
+    <ProjectReference Include="..\..\src\Fcg.Identity.Infrastructure.Kafka\Fcg.Identity.Infrastructure.Kafka.csproj" />
+    <ProjectReference Include="..\..\src\Fcg.Identity.Infrastructure.SqlServer\Fcg.Identity.Infrastructure.SqlServer.csproj" />
+    <ProjectReference Include="..\..\src\Fcg.Identity.Messages\Fcg.Identity.Messages.csproj" />
+    <ProjectReference Include="..\..\src\Fcg.Identity.WebApi\Fcg.Identity.WebApi.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
+  "unitTestProvider": {
+    "name": "xUnit"
+  },
+  "bindingCulture": {
+    "language": "pt-br"
+  },
+  "language": {
+    "feature": "pt-br"
+  }
+}

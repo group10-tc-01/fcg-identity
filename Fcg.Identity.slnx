@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="docker-compose.yml" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/0 - Domain/">
+    <Project Path="src/Fcg.Identity.Domain/Fcg.Identity.Domain.csproj" />
+    <Project Path="src/Fcg.Identity.Messages/Fcg.Identity.Messages.csproj" />
+  </Folder>
+  <Folder Name="/src/1 - Application/">
+    <Project Path="src/Fcg.Identity.Application/Fcg.Identity.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/2 - Infrastructure/">
+    <Project Path="src/Fcg.Identity.Infrastructure.Auth/Fcg.Identity.Infrastructure.Auth.csproj" />
+    <Project Path="src/Fcg.Identity.Infrastructure.Http/Fcg.Identity.Infrastructure.Http.csproj" />
+    <Project Path="src/Fcg.Identity.Infrastructure.Kafka/Fcg.Identity.Infrastructure.Kafka.csproj" />
+    <Project Path="src/Fcg.Identity.Infrastructure.SqlServer/Fcg.Identity.Infrastructure.SqlServer.csproj" />
+  </Folder>
+  <Folder Name="/src/3 - WebApi/">
+    <Project Path="src/Fcg.Identity.WebApi/Fcg.Identity.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fcg.Identity.ArchitectureTests/Fcg.Identity.ArchitectureTests.csproj" />
+    <Project Path="tests/Fcg.Identity.CommomTestsUtilities/Fcg.Identity.CommomTestsUtilities.csproj" />
+    <Project Path="tests/Fcg.Identity.FunctionalTests/Fcg.Identity.FunctionalTests.csproj" />
+    <Project Path="tests/Fcg.Identity.IntegratedTests/Fcg.Identity.IntegratedTests.csproj" />
+    <Project Path="tests/Fcg.Identity.UnitTests/Fcg.Identity.UnitTests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,48 @@
+name: Fcg.Identity CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - src/**
+      - tests/**
+      - Directory.Build.props
+      - Directory.Packages.props
+      - .editorconfig
+      - docker-compose.yml
+      - .github/workflows/dotnet-service-ci.yml
+  push:
+    branches: [main]
+    paths:
+      - src/**
+      - tests/**
+      - Directory.Build.props
+      - Directory.Packages.props
+      - .editorconfig
+      - docker-compose.yml
+      - .github/workflows/dotnet-service-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  security-events: write
+
+jobs:
+  ci:
+    uses: group10-tc-01/fcg-pipelines/.github/workflows/dotnet-service-ci.yml@main
+    with:
+      service_name: fcg-identity
+      dotnet_version: 8.0.x
+      solution_path: Fcg.Identity.slnx
+      unit_tests_path: tests/Fcg.Identity.UnitTests/Fcg.Identity.UnitTests.csproj
+      integration_tests_path: tests/Fcg.Identity.IntegratedTests/Fcg.Identity.IntegratedTests.csproj
+      test_environment: Test
+      coverage_threshold: 80
+      run_sonar: true
+      sonar_project_key: group10-tc-01_fcg-identity
+      sonar_organization: group10-tc-01
+      dockerfile_path: src/Fcg.Identity.WebApi/Dockerfile
+      docker_context: .
+    secrets: inherit
