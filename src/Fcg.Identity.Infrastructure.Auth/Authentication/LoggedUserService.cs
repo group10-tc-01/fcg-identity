@@ -1,6 +1,6 @@
+using System.Security.Claims;
 using Fcg.Identity.Application.Abstractions.Authentication;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace Fcg.Identity.Infrastructure.Auth.Authentication;
 

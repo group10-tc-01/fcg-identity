@@ -1,4 +1,4 @@
-namespace Fcg.Identity.Domain;
+namespace Fcg.Identity.Domain.Results;
 
 public readonly struct Result<TValue>
 {

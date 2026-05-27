@@ -1,10 +1,10 @@
+using System.Net;
+using System.Net.Http.Json;
 using Fcg.Identity.Application.UseCases.Items.CreateItem;
 using Fcg.Identity.CommomTestsUtilities.Builders.Items;
 using Fcg.Identity.IntegratedTests.Configurations;
 using Fcg.Identity.WebApi.Models;
 using FluentAssertions;
-using System.Net;
-using System.Net.Http.Json;
 
 namespace Fcg.Identity.IntegratedTests.Controllers;
 

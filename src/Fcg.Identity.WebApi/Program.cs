@@ -1,9 +1,9 @@
 using Fcg.Identity.Application.DependencyInjection;
-using Fcg.Identity.Infrastructure.Http.DependencyInjection;
-using Fcg.Identity.WebApi.DependencyInjection;
 using Fcg.Identity.Infrastructure.Auth.DependencyInjection;
-using Fcg.Identity.Infrastructure.SqlServer.DependencyInjection;
+using Fcg.Identity.Infrastructure.Http.DependencyInjection;
 using Fcg.Identity.Infrastructure.Kafka.DependencyInjection;
+using Fcg.Identity.Infrastructure.SqlServer.DependencyInjection;
+using Fcg.Identity.WebApi.DependencyInjection;
 
 namespace Fcg.Identity.WebApi;
 

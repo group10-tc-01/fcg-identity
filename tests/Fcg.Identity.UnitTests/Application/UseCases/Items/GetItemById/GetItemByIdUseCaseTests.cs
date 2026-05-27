@@ -1,9 +1,8 @@
 using Fcg.Identity.Application.UseCases.Items.GetItemById;
 using Fcg.Identity.CommomTestsUtilities.Builders.Items;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
-using Fcg.Identity.Domain;
+using Fcg.Identity.Domain.Results;
 using FluentAssertions;
-using Xunit;
 
 namespace Fcg.Identity.UnitTests.Application.UseCases.Items.GetItemById;
 

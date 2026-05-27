@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fcg.Identity.Infrastructure.SqlServer.Persistence;
 
-public sealed class CleanApiDbContext : DbContext, IUnitOfWork
+public sealed class FcgIdentityDbContext : DbContext, IUnitOfWork
 {
-    public CleanApiDbContext(DbContextOptions<CleanApiDbContext> options) : base(options)
+    public FcgIdentityDbContext(DbContextOptions<FcgIdentityDbContext> options) : base(options)
     {
     }
 
@@ -19,6 +19,6 @@ public sealed class CleanApiDbContext : DbContext, IUnitOfWork
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CleanApiDbContext).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(FcgIdentityDbContext).Assembly);
     }
 }

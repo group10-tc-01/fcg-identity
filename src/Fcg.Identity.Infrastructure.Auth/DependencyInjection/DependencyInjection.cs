@@ -1,3 +1,4 @@
+using System.Text;
 using Fcg.Identity.Application.Abstractions.Authentication;
 using Fcg.Identity.Application.Settings;
 using Fcg.Identity.Infrastructure.Auth.Authentication;
@@ -5,7 +6,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 namespace Fcg.Identity.Infrastructure.Auth.DependencyInjection;
 

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Fcg.Identity.WebApi.Middlewares;
 using Fcg.Identity.WebApi.Observability;
@@ -7,7 +8,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
-using System.Text.Json.Serialization;
 
 namespace Fcg.Identity.WebApi.DependencyInjection;
 

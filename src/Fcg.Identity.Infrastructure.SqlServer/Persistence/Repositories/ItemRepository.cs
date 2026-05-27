@@ -5,9 +5,9 @@ namespace Fcg.Identity.Infrastructure.SqlServer.Persistence.Repositories;
 
 public sealed class ItemRepository : IItemRepository
 {
-    private readonly CleanApiDbContext _dbContext;
+    private readonly FcgIdentityDbContext _dbContext;
 
-    public ItemRepository(CleanApiDbContext dbContext)
+    public ItemRepository(FcgIdentityDbContext dbContext)
     {
         _dbContext = dbContext;
     }

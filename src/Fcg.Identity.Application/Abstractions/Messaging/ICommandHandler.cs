@@ -1,4 +1,4 @@
-using Fcg.Identity.Domain;
+using Fcg.Identity.Domain.Results;
 using MediatR;
 
 namespace Fcg.Identity.Application.Abstractions.Messaging;

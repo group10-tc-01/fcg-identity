@@ -1,3 +1,5 @@
+using Fcg.Identity.Domain.Results;
+
 namespace Fcg.Identity.Domain.Items;
 
 public sealed class Item

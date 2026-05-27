@@ -1,10 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Fcg.Identity.Application.Abstractions.Authentication;
 using Fcg.Identity.Application.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace Fcg.Identity.Infrastructure.Auth.Authentication;
 
