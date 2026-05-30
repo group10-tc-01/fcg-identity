@@ -14,4 +14,16 @@ public sealed class KeycloakSettings
 
     [Required]
     public string ClientId { get; set; } = string.Empty;
+
+    [Required]
+    public string AdminRealm { get; set; } = "master";
+
+    [Required]
+    public string AdminClientId { get; set; } = "admin-cli";
+
+    [Required]
+    public string AdminUsername { get; set; } = string.Empty;
+
+    [Required]
+    public string AdminPassword { get; set; } = string.Empty;
 }

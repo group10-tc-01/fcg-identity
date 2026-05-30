@@ -1,3 +1,5 @@
+using Fcg.Identity.Application.Abstractions.Identity;
+using Fcg.Identity.Infrastructure.Keycloak.Identity;
 using Fcg.Identity.Infrastructure.Keycloak.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +15,8 @@ public static class DependencyInjection
             .Bind(configuration.GetRequiredSection(KeycloakSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        services.AddHttpClient<IIdentityProvider, KeycloakIdentityProvider>();
 
         return services;
     }
