@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.Shared.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -5,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Fcg.Identity.Infrastructure.SqlServer.Persistence.Configurations;
 
+[ExcludeFromCodeCoverage]
 public sealed class DonorProfileConfiguration : BaseConfiguration<DonorProfile>
 {
     public override void Configure(EntityTypeBuilder<DonorProfile> builder)

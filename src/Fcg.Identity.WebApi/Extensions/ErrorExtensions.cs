@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using Fcg.Identity.Domain.Shared.Results;
 using Fcg.Identity.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fcg.Identity.WebApi.Extensions;
 
+[ExcludeFromCodeCoverage]
 public static class ErrorExtensions
 {
     public static IActionResult ToActionResult(this Error error) =>

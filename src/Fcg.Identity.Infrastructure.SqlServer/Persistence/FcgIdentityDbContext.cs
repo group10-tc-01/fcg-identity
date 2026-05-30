@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using Fcg.Identity.Domain.Abstractions;
 using Fcg.Identity.Domain.DonorProfiles;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fcg.Identity.Infrastructure.SqlServer.Persistence;
 
+[ExcludeFromCodeCoverage]
 public sealed class FcgIdentityDbContext : DbContext, IUnitOfWork
 {
     public FcgIdentityDbContext(DbContextOptions<FcgIdentityDbContext> options) : base(options)

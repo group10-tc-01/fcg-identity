@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using Fcg.Identity.Domain.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Fcg.Identity.Infrastructure.SqlServer.Persistence.Configurations;
 
+[ExcludeFromCodeCoverage]
 public abstract class BaseConfiguration<T> : IEntityTypeConfiguration<T>
     where T : BaseEntity
 {

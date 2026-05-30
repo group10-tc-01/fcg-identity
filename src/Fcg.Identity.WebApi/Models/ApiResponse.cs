@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Fcg.Identity.WebApi.Models;
 
+[ExcludeFromCodeCoverage]
 public sealed class ApiResponse<T>
 {
     public bool Success { get; init; }

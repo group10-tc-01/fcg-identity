@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.Json;
 using Fcg.Identity.WebApi.Models;
 
 namespace Fcg.Identity.WebApi.Middlewares;
 
+[ExcludeFromCodeCoverage]
 public sealed class GlobalExceptionMiddleware
 {
     private readonly RequestDelegate _next;
