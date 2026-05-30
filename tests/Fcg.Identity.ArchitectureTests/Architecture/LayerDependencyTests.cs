@@ -16,9 +16,8 @@ public class LayerDependencyTests
 
     private static readonly Assembly[] InfrastructureAssemblyValues =
     [
-        typeof(Fcg.Identity.Infrastructure.Auth.DependencyInjection.DependencyInjection).Assembly,
-        typeof(Fcg.Identity.Infrastructure.Http.DependencyInjection.DependencyInjection).Assembly,
         typeof(Fcg.Identity.Infrastructure.Kafka.DependencyInjection.DependencyInjection).Assembly,
+        typeof(Fcg.Identity.Infrastructure.Keycloak.DependencyInjection.DependencyInjection).Assembly,
         typeof(Fcg.Identity.Infrastructure.SqlServer.DependencyInjection.DependencyInjection).Assembly
     ];
 
@@ -26,8 +25,7 @@ public class LayerDependencyTests
     {
         { InfrastructureAssemblyValues[0], InfrastructureAssemblyValues[0].GetName().Name! },
         { InfrastructureAssemblyValues[1], InfrastructureAssemblyValues[1].GetName().Name! },
-        { InfrastructureAssemblyValues[2], InfrastructureAssemblyValues[2].GetName().Name! },
-        { InfrastructureAssemblyValues[3], InfrastructureAssemblyValues[3].GetName().Name! }
+        { InfrastructureAssemblyValues[2], InfrastructureAssemblyValues[2].GetName().Name! }
     };
 
     public static TheoryData<Assembly, string> InnerLayersAndForbiddenWebApiDependency => new()
@@ -37,8 +35,7 @@ public class LayerDependencyTests
         { MessagesAssembly, WebApiAssembly.GetName().Name! },
         { InfrastructureAssemblyValues[0], WebApiAssembly.GetName().Name! },
         { InfrastructureAssemblyValues[1], WebApiAssembly.GetName().Name! },
-        { InfrastructureAssemblyValues[2], WebApiAssembly.GetName().Name! },
-        { InfrastructureAssemblyValues[3], WebApiAssembly.GetName().Name! }
+        { InfrastructureAssemblyValues[2], WebApiAssembly.GetName().Name! }
     };
 
     [Fact]
@@ -53,8 +50,7 @@ public class LayerDependencyTests
                 WebApiAssembly.GetName().Name!,
                 InfrastructureAssemblyValues[0].GetName().Name!,
                 InfrastructureAssemblyValues[1].GetName().Name!,
-                InfrastructureAssemblyValues[2].GetName().Name!,
-                InfrastructureAssemblyValues[3].GetName().Name!
+                InfrastructureAssemblyValues[2].GetName().Name!
             ])
             .GetResult();
 
@@ -73,8 +69,7 @@ public class LayerDependencyTests
                 WebApiAssembly.GetName().Name!,
                 InfrastructureAssemblyValues[0].GetName().Name!,
                 InfrastructureAssemblyValues[1].GetName().Name!,
-                InfrastructureAssemblyValues[2].GetName().Name!,
-                InfrastructureAssemblyValues[3].GetName().Name!
+                InfrastructureAssemblyValues[2].GetName().Name!
             ])
             .GetResult();
 
@@ -82,9 +77,8 @@ public class LayerDependencyTests
     }
 
     [Theory]
-    [InlineData("Fcg.Identity.Infrastructure.Auth")]
-    [InlineData("Fcg.Identity.Infrastructure.Http")]
     [InlineData("Fcg.Identity.Infrastructure.Kafka")]
+    [InlineData("Fcg.Identity.Infrastructure.Keycloak")]
     [InlineData("Fcg.Identity.Infrastructure.SqlServer")]
     [InlineData("Fcg.Identity.WebApi")]
     public void Application_Should_Not_Depend_On_Infrastructure_Or_WebApi(string forbiddenDependency)

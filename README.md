@@ -206,10 +206,8 @@ src/
   Fcg.Identity.Domain/
   Fcg.Identity.Application/
   Fcg.Identity.Messages/
-  Fcg.Identity.Infrastructure.Auth/       # present if --useAuth
+  Fcg.Identity.Infrastructure.Keycloak/   # Keycloak integration
   Fcg.Identity.Infrastructure.SqlServer/  # present if --useSqlServer
-  Fcg.Identity.Infrastructure.PostgreSql/ # present if --usePostgreSql
-  Fcg.Identity.Infrastructure.MongoDb/    # present if --useMongoDB
   Fcg.Identity.Infrastructure.Kafka/      # present if --useKafka
   Fcg.Identity.WebApi/
 tests/

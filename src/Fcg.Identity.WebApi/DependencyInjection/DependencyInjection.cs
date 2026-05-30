@@ -24,8 +24,10 @@ public static class DependencyInjection
 
         services.AddVersioning();
         services.AddFilters();
+        services.AddAuthorization();
         services.AddHealthChecks().AddDbContextCheck<FcgIdentityDbContext>();
         services.AddRouting(options => options.LowercaseUrls = true);
+        services.AddObservabilitySettings(configuration);
         services.AddObservability(configuration);
         services.AddSerilogLogging(configuration);
         return services;
@@ -98,22 +100,20 @@ public static class DependencyInjection
 
     private static void AddObservability(this IServiceCollection services, IConfiguration configuration)
     {
-        var options = new ObservabilityOptions();
-        configuration.GetSection(ObservabilityOptions.SectionName).Bind(options);
+        var settings = GetObservabilitySettings(configuration);
 
         var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
 
-        var resourceBuilder = ObservabilityTelemetry.CreateResourceBuilder(options, environment);
+        var resourceBuilder = ObservabilityTelemetry.CreateResourceBuilder(settings, environment);
 
         services.AddOpenTelemetry()
-            .WithTracing(builder => builder.ConfigureTracing(options, resourceBuilder))
-            .WithMetrics(builder => builder.ConfigureMetrics(options, resourceBuilder));
+            .WithTracing(builder => builder.ConfigureTracing(settings, resourceBuilder))
+            .WithMetrics(builder => builder.ConfigureMetrics(settings, resourceBuilder));
     }
 
     private static void AddSerilogLogging(this IServiceCollection services, IConfiguration configuration)
     {
-        var options = new ObservabilityOptions();
-        configuration.GetSection(ObservabilityOptions.SectionName).Bind(options);
+        var settings = GetObservabilitySettings(configuration);
 
         var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
 
@@ -125,19 +125,19 @@ public static class DependencyInjection
             .Enrich.WithProperty("Environment", environment)
             .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}");
 
-        if (options.EnableOtlpExporter && !string.IsNullOrEmpty(options.OtlpEndpoint))
+        if (settings.EnableOtlpExporter && !string.IsNullOrEmpty(settings.OtlpEndpoint))
         {
             loggerConfig.WriteTo.OpenTelemetry(otlpOptions =>
             {
-                otlpOptions.Endpoint = $"{options.OtlpEndpoint}/otlp/v1/logs";
+                otlpOptions.Endpoint = $"{settings.OtlpEndpoint}/otlp/v1/logs";
                 otlpOptions.Protocol = OtlpProtocol.HttpProtobuf;
                 otlpOptions.Headers = new Dictionary<string, string>
                 {
-                    ["Authorization"] = options.OtlpAuthHeader
+                    ["Authorization"] = settings.OtlpAuthHeader
                 };
                 otlpOptions.ResourceAttributes = new Dictionary<string, object>
                 {
-                    ["service.name"] = options.ServiceName,
+                    ["service.name"] = settings.ServiceName,
                     ["deployment.environment"] = environment
                 };
             });
@@ -148,9 +148,9 @@ public static class DependencyInjection
         Log.Information("Starting {Application} application", "FCG.Identity");
         Log.Information("Environment: {Environment}", environment);
 
-        if (options.EnableOtlpExporter)
+        if (settings.EnableOtlpExporter)
         {
-            Log.Information("OTLP exporter enabled — sending telemetry to {Endpoint}", options.OtlpEndpoint);
+            Log.Information("OTLP exporter enabled — sending telemetry to {Endpoint}", settings.OtlpEndpoint);
         }
         else
         {
@@ -162,5 +162,22 @@ public static class DependencyInjection
             loggingBuilder.ClearProviders();
             loggingBuilder.AddSerilog();
         });
+    }
+
+    private static void AddObservabilitySettings(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddOptions<ObservabilitySettings>()
+            .Bind(configuration.GetRequiredSection(ObservabilitySettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+    }
+
+    private static ObservabilitySettings GetObservabilitySettings(IConfiguration configuration)
+    {
+        return configuration
+            .GetRequiredSection(ObservabilitySettings.SectionName)
+            .Get<ObservabilitySettings>()
+            ?? throw new InvalidOperationException("Observability settings must be configured.");
     }
 }

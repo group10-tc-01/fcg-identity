@@ -11,9 +11,8 @@ public class ProjectStructureTests
     {
         "src/Fcg.Identity.Application/Fcg.Identity.Application.csproj",
         "src/Fcg.Identity.Domain/Fcg.Identity.Domain.csproj",
-        "src/Fcg.Identity.Infrastructure.Auth/Fcg.Identity.Infrastructure.Auth.csproj",
-        "src/Fcg.Identity.Infrastructure.Http/Fcg.Identity.Infrastructure.Http.csproj",
         "src/Fcg.Identity.Infrastructure.Kafka/Fcg.Identity.Infrastructure.Kafka.csproj",
+        "src/Fcg.Identity.Infrastructure.Keycloak/Fcg.Identity.Infrastructure.Keycloak.csproj",
         "src/Fcg.Identity.Infrastructure.SqlServer/Fcg.Identity.Infrastructure.SqlServer.csproj",
         "src/Fcg.Identity.Messages/Fcg.Identity.Messages.csproj",
         "src/Fcg.Identity.WebApi/Fcg.Identity.WebApi.csproj"
@@ -36,9 +35,8 @@ public class ProjectStructureTests
         {
             "src/Fcg.Identity.Domain",
             "src/Fcg.Identity.Application",
-            "src/Fcg.Identity.Infrastructure.Auth",
-            "src/Fcg.Identity.Infrastructure.Http",
             "src/Fcg.Identity.Infrastructure.Kafka",
+            "src/Fcg.Identity.Infrastructure.Keycloak",
             "src/Fcg.Identity.Infrastructure.SqlServer",
             "src/Fcg.Identity.WebApi"
         };

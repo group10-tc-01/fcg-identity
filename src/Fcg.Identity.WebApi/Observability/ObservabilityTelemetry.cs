@@ -9,11 +9,11 @@ namespace Fcg.Identity.WebApi.Observability;
 [ExcludeFromCodeCoverage]
 public static class ObservabilityTelemetry
 {
-    public static ResourceBuilder CreateResourceBuilder(ObservabilityOptions options, string environment)
+    public static ResourceBuilder CreateResourceBuilder(ObservabilitySettings settings, string environment)
     {
         return ResourceBuilder.CreateDefault()
             .AddService(
-                serviceName: options.ServiceName,
+                serviceName: settings.ServiceName,
                 serviceVersion: typeof(ObservabilityTelemetry).Assembly.GetName().Version?.ToString() ?? "1.0.0",
                 serviceNamespace: "FCG")
             .AddAttributes(new Dictionary<string, object>
@@ -24,7 +24,7 @@ public static class ObservabilityTelemetry
 
     public static TracerProviderBuilder ConfigureTracing(
         this TracerProviderBuilder builder,
-        ObservabilityOptions options,
+        ObservabilitySettings settings,
         ResourceBuilder resourceBuilder)
     {
         builder
@@ -37,13 +37,13 @@ public static class ObservabilityTelemetry
             .AddHttpClientInstrumentation()
             .AddSqlClientInstrumentation();
 
-        if (options.EnableOtlpExporter)
+        if (settings.EnableOtlpExporter)
         {
             builder.AddOtlpExporter(exporterOpts =>
             {
-                exporterOpts.Endpoint = new Uri($"{options.OtlpEndpoint}/otlp/v1/traces");
+                exporterOpts.Endpoint = new Uri($"{settings.OtlpEndpoint}/otlp/v1/traces");
                 exporterOpts.Protocol = OtlpExportProtocol.HttpProtobuf;
-                exporterOpts.Headers = $"Authorization={options.OtlpAuthHeader}";
+                exporterOpts.Headers = $"Authorization={settings.OtlpAuthHeader}";
             });
         }
 
@@ -52,7 +52,7 @@ public static class ObservabilityTelemetry
 
     public static MeterProviderBuilder ConfigureMetrics(
         this MeterProviderBuilder builder,
-        ObservabilityOptions options,
+        ObservabilitySettings settings,
         ResourceBuilder resourceBuilder)
     {
         builder
@@ -61,13 +61,13 @@ public static class ObservabilityTelemetry
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation();
 
-        if (options.EnableOtlpExporter)
+        if (settings.EnableOtlpExporter)
         {
             builder.AddOtlpExporter(exporterOpts =>
             {
-                exporterOpts.Endpoint = new Uri($"{options.OtlpEndpoint}/otlp/v1/metrics");
+                exporterOpts.Endpoint = new Uri($"{settings.OtlpEndpoint}/otlp/v1/metrics");
                 exporterOpts.Protocol = OtlpExportProtocol.HttpProtobuf;
-                exporterOpts.Headers = $"Authorization={options.OtlpAuthHeader}";
+                exporterOpts.Headers = $"Authorization={settings.OtlpAuthHeader}";
             });
         }
 
