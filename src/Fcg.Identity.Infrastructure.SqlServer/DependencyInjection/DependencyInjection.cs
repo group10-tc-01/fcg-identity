@@ -1,5 +1,5 @@
 using Fcg.Identity.Domain.Abstractions;
-using Fcg.Identity.Domain.Items;
+using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Infrastructure.SqlServer.Persistence;
 using Fcg.Identity.Infrastructure.SqlServer.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ public static class DependencyInjection
         services.AddDbContext<FcgIdentityDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("SqlServer")));
 
-        services.AddScoped<IItemRepository, ItemRepository>();
+        services.AddScoped<IDonorProfileRepository, DonorProfileRepository>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<FcgIdentityDbContext>());
         services.AddHealthChecks().AddDbContextCheck<FcgIdentityDbContext>("sqlserver");
 

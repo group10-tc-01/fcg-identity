@@ -1,5 +1,5 @@
 using Fcg.Identity.Domain.Abstractions;
-using Fcg.Identity.Domain.Items;
+using Fcg.Identity.Domain.DonorProfiles;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fcg.Identity.Infrastructure.SqlServer.Persistence;
@@ -10,7 +10,7 @@ public sealed class FcgIdentityDbContext : DbContext, IUnitOfWork
     {
     }
 
-    public DbSet<Item> Items => Set<Item>();
+    public DbSet<DonorProfile> DonorProfiles => Set<DonorProfile>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

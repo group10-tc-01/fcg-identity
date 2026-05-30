@@ -10,5 +10,5 @@ public sealed class KafkaSettings
     public string BootstrapServers { get; set; } = "localhost:9092";
 
     [Required]
-    public string TopicName { get; set; } = "item-created";
+    public string TopicName { get; set; } = "identity-events";
 }

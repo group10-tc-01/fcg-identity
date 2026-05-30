@@ -1,5 +1,5 @@
 using System.Reflection;
-using Fcg.Identity.Domain.Items;
+using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Messages;
 using Fcg.Identity.WebApi.Models;
 using FluentAssertions;
@@ -9,9 +9,9 @@ namespace Fcg.Identity.ArchitectureTests.Architecture;
 
 public class LayerDependencyTests
 {
-    private static readonly Assembly DomainAssembly = typeof(Item).Assembly;
+    private static readonly Assembly DomainAssembly = typeof(DonorProfile).Assembly;
     private static readonly Assembly ApplicationAssembly = typeof(Fcg.Identity.Application.DependencyInjection.DependencyInjection).Assembly;
-    private static readonly Assembly MessagesAssembly = typeof(ItemCreatedMessage).Assembly;
+    private static readonly Assembly MessagesAssembly = typeof(ResourceMessages).Assembly;
     private static readonly Assembly WebApiAssembly = typeof(ApiResponse<>).Assembly;
 
     private static readonly Assembly[] InfrastructureAssemblyValues =

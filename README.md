@@ -130,21 +130,6 @@ dotnet new cleanarchapi -n MyCompany.MyService \
   --useKafka
 ```
 
-### Without MediatR (direct use case injection)
-
-```bash
-dotnet new cleanarchapi -n MyCompany.MyService \
-  --useMediatR false
-```
-
-Controllers will inject use cases directly:
-
-```csharp
-public ItemsController(
-    ICommandHandler<CreateItemRequest, CreateItemResponse> createItem,
-    IQueryHandler<GetItemByIdRequest, GetItemByIdResponse> getItemById)
-```
-
 ### Without authentication
 
 ```bash
