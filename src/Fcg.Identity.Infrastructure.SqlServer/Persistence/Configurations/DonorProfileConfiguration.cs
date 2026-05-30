@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Fcg.Identity.Infrastructure.SqlServer.Persistence.Configurations;
 
-public sealed class DonorProfileConfiguration : IEntityTypeConfiguration<DonorProfile>
+public sealed class DonorProfileConfiguration : BaseConfiguration<DonorProfile>
 {
-    public void Configure(EntityTypeBuilder<DonorProfile> builder)
+    public override void Configure(EntityTypeBuilder<DonorProfile> builder)
     {
-        builder.ToTable("DonorProfiles");
+        base.Configure(builder);
 
-        builder.HasKey(donorProfile => donorProfile.Id);
+        builder.ToTable("DonorProfiles");
 
         builder.Property(donorProfile => donorProfile.KeycloakUserId)
             .HasMaxLength(100)
@@ -29,9 +29,6 @@ public sealed class DonorProfileConfiguration : IEntityTypeConfiguration<DonorPr
         builder.Property(donorProfile => donorProfile.Cpf)
             .HasConversion(cpf => cpf.Value, value => Cpf.Create(value).Value)
             .HasMaxLength(14)
-            .IsRequired();
-
-        builder.Property(donorProfile => donorProfile.CreatedAt)
             .IsRequired();
 
         builder.HasIndex(donorProfile => donorProfile.KeycloakUserId)

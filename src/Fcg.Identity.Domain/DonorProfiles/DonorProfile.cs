@@ -1,9 +1,10 @@
+using Fcg.Identity.Domain.Abstractions;
 using Fcg.Identity.Domain.Shared.Results;
 using Fcg.Identity.Domain.Shared.ValueObjects;
 
 namespace Fcg.Identity.Domain.DonorProfiles;
 
-public sealed class DonorProfile
+public sealed class DonorProfile : BaseEntity
 {
     private DonorProfile()
     {
@@ -14,24 +15,19 @@ public sealed class DonorProfile
         string keycloakUserId,
         string fullName,
         Email email,
-        Cpf cpf,
-        DateTime createdAt)
+        Cpf cpf)
+        : base(id)
     {
-        Id = id;
         KeycloakUserId = keycloakUserId;
         FullName = fullName;
         Email = email;
         Cpf = cpf;
-        CreatedAt = createdAt;
     }
 
-    public Guid Id { get; private set; }
     public string KeycloakUserId { get; private set; } = string.Empty;
     public string FullName { get; private set; } = string.Empty;
     public Email Email { get; private set; }
     public Cpf Cpf { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
 
     public static Result<DonorProfile> Create(string keycloakUserId, string fullName, string email, string cpf)
     {
@@ -77,8 +73,7 @@ public sealed class DonorProfile
             normalizedKeycloakUserId,
             normalizedFullName,
             emailResult.Value,
-            cpfResult.Value,
-            DateTime.UtcNow);
+            cpfResult.Value);
     }
 
     public Result<DonorProfile> Update(string fullName, string email)
