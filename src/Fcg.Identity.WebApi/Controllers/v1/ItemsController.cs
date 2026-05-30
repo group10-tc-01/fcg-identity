@@ -21,7 +21,7 @@ public sealed class ItemsController : BaseApiController
         [FromBody] CreateItemRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await Mediator.Send(request, cancellationToken);
+        var result = await _mediator.Send(request, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -41,7 +41,7 @@ public sealed class ItemsController : BaseApiController
         Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await Mediator.Send(new GetItemByIdRequest(id), cancellationToken);
+        var result = await _mediator.Send(new GetItemByIdRequest(id), cancellationToken);
 
         if (result.IsFailure)
         {
