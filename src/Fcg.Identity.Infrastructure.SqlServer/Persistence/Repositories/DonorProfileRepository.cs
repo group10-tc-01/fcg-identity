@@ -1,4 +1,5 @@
 using Fcg.Identity.Domain.DonorProfiles;
+using Fcg.Identity.Domain.Shared.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fcg.Identity.Infrastructure.SqlServer.Persistence.Repositories;
@@ -33,13 +34,23 @@ public sealed class DonorProfileRepository : IDonorProfileRepository
 
     public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        var normalizedEmail = email.Trim().ToLowerInvariant();
-        return _dbContext.DonorProfiles.AnyAsync(donorProfile => donorProfile.Email == normalizedEmail, cancellationToken);
+        var emailResult = Email.Create(email);
+        if (emailResult.IsFailure)
+        {
+            return Task.FromResult(false);
+        }
+
+        return _dbContext.DonorProfiles.AnyAsync(donorProfile => donorProfile.Email == emailResult.Value, cancellationToken);
     }
 
     public Task<bool> ExistsByCpfAsync(string cpf, CancellationToken cancellationToken = default)
     {
-        var normalizedCpf = cpf.Trim();
-        return _dbContext.DonorProfiles.AnyAsync(donorProfile => donorProfile.Cpf == normalizedCpf, cancellationToken);
+        var cpfResult = Cpf.Create(cpf);
+        if (cpfResult.IsFailure)
+        {
+            return Task.FromResult(false);
+        }
+
+        return _dbContext.DonorProfiles.AnyAsync(donorProfile => donorProfile.Cpf == cpfResult.Value, cancellationToken);
     }
 }

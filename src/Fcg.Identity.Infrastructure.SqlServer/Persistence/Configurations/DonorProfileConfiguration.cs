@@ -1,4 +1,5 @@
 using Fcg.Identity.Domain.DonorProfiles;
+using Fcg.Identity.Domain.Shared.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,10 +22,12 @@ public sealed class DonorProfileConfiguration : IEntityTypeConfiguration<DonorPr
             .IsRequired();
 
         builder.Property(donorProfile => donorProfile.Email)
+            .HasConversion(email => email.Value, value => Email.Create(value).Value)
             .HasMaxLength(320)
             .IsRequired();
 
         builder.Property(donorProfile => donorProfile.Cpf)
+            .HasConversion(cpf => cpf.Value, value => Cpf.Create(value).Value)
             .HasMaxLength(14)
             .IsRequired();
 

@@ -1,4 +1,4 @@
-namespace Fcg.Identity.Domain.Results;
+namespace Fcg.Identity.Domain.Shared.Results;
 
 public enum ErrorType
 {

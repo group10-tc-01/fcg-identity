@@ -39,40 +39,52 @@ public class LayerDependencyTests
     };
 
     [Fact]
-    public void Domain_Should_Not_Depend_On_Other_Fcg_Projects()
+    public void Given_DomainLayer_When_ArchitectureIsValidated_Then_ShouldNotDependOnOtherFcgProjects()
     {
+        // Arrange
+        var forbiddenDependencies = new[]
+        {
+            ApplicationAssembly.GetName().Name!,
+            MessagesAssembly.GetName().Name!,
+            WebApiAssembly.GetName().Name!,
+            InfrastructureAssemblyValues[0].GetName().Name!,
+            InfrastructureAssemblyValues[1].GetName().Name!,
+            InfrastructureAssemblyValues[2].GetName().Name!
+        };
+
+        // Act
         var result = Types
             .InAssembly(DomainAssembly)
             .Should()
-            .NotHaveDependencyOnAny([
-                ApplicationAssembly.GetName().Name!,
-                MessagesAssembly.GetName().Name!,
-                WebApiAssembly.GetName().Name!,
-                InfrastructureAssemblyValues[0].GetName().Name!,
-                InfrastructureAssemblyValues[1].GetName().Name!,
-                InfrastructureAssemblyValues[2].GetName().Name!
-            ])
+            .NotHaveDependencyOnAny(forbiddenDependencies)
             .GetResult();
 
+        // Assert
         result.ShouldBeSuccessful("the domain layer must remain independent from application, infrastructure, messages, and web api projects");
     }
 
     [Fact]
-    public void Messages_Should_Not_Depend_On_Other_Fcg_Projects()
+    public void Given_MessagesLayer_When_ArchitectureIsValidated_Then_ShouldNotDependOnOtherFcgProjects()
     {
+        // Arrange
+        var forbiddenDependencies = new[]
+        {
+            DomainAssembly.GetName().Name!,
+            ApplicationAssembly.GetName().Name!,
+            WebApiAssembly.GetName().Name!,
+            InfrastructureAssemblyValues[0].GetName().Name!,
+            InfrastructureAssemblyValues[1].GetName().Name!,
+            InfrastructureAssemblyValues[2].GetName().Name!
+        };
+
+        // Act
         var result = Types
             .InAssembly(MessagesAssembly)
             .Should()
-            .NotHaveDependencyOnAny([
-                DomainAssembly.GetName().Name!,
-                ApplicationAssembly.GetName().Name!,
-                WebApiAssembly.GetName().Name!,
-                InfrastructureAssemblyValues[0].GetName().Name!,
-                InfrastructureAssemblyValues[1].GetName().Name!,
-                InfrastructureAssemblyValues[2].GetName().Name!
-            ])
+            .NotHaveDependencyOnAny(forbiddenDependencies)
             .GetResult();
 
+        // Assert
         result.ShouldBeSuccessful("message contracts should stay isolated so services can share contracts without pulling application code");
     }
 
@@ -81,45 +93,58 @@ public class LayerDependencyTests
     [InlineData("Fcg.Identity.Infrastructure.Keycloak")]
     [InlineData("Fcg.Identity.Infrastructure.SqlServer")]
     [InlineData("Fcg.Identity.WebApi")]
-    public void Application_Should_Not_Depend_On_Infrastructure_Or_WebApi(string forbiddenDependency)
+    public void Given_ApplicationLayer_When_ArchitectureIsValidated_Then_ShouldNotDependOnInfrastructureOrWebApi(string forbiddenDependency)
     {
+        // Arrange
+        var dependency = forbiddenDependency;
+
+        // Act
         var result = Types
             .InAssembly(ApplicationAssembly)
             .Should()
-            .NotHaveDependencyOn(forbiddenDependency)
+            .NotHaveDependencyOn(dependency)
             .GetResult();
 
+        // Assert
         result.ShouldBeSuccessful("the application layer can orchestrate domain and contracts, but must not know infrastructure or web api details");
     }
 
     [Theory]
     [MemberData(nameof(InfrastructureAssemblies))]
-    public void Infrastructure_Should_Not_Depend_On_Other_Infrastructure_Projects(Assembly assembly, string currentAssemblyName)
+    public void Given_InfrastructureLayer_When_ArchitectureIsValidated_Then_ShouldNotDependOnOtherInfrastructureProjects(Assembly assembly, string currentAssemblyName)
     {
+        // Arrange
         var forbiddenInfrastructureDependencies = InfrastructureAssemblyValues
             .Select(infrastructureAssembly => infrastructureAssembly.GetName().Name!)
             .Where(assemblyName => assemblyName != currentAssemblyName)
             .ToArray();
 
+        // Act
         var result = Types
             .InAssembly(assembly)
             .Should()
             .NotHaveDependencyOnAny(forbiddenInfrastructureDependencies)
             .GetResult();
 
+        // Assert
         result.ShouldBeSuccessful("infrastructure adapters should not depend on each other");
     }
 
     [Theory]
     [MemberData(nameof(InnerLayersAndForbiddenWebApiDependency))]
-    public void Inner_Layers_Should_Not_Depend_On_WebApi(Assembly assembly, string webApiAssemblyName)
+    public void Given_InnerLayer_When_ArchitectureIsValidated_Then_ShouldNotDependOnWebApi(Assembly assembly, string webApiAssemblyName)
     {
+        // Arrange
+        var forbiddenDependency = webApiAssemblyName;
+
+        // Act
         var result = Types
             .InAssembly(assembly)
             .Should()
-            .NotHaveDependencyOn(webApiAssemblyName)
+            .NotHaveDependencyOn(forbiddenDependency)
             .GetResult();
 
+        // Assert
         result.ShouldBeSuccessful("the web api is the composition edge and must not be referenced by inner layers");
     }
 }

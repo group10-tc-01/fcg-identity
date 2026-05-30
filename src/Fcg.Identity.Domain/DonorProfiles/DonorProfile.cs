@@ -1,4 +1,5 @@
-using Fcg.Identity.Domain.Results;
+using Fcg.Identity.Domain.Shared.Results;
+using Fcg.Identity.Domain.Shared.ValueObjects;
 
 namespace Fcg.Identity.Domain.DonorProfiles;
 
@@ -12,8 +13,8 @@ public sealed class DonorProfile
         Guid id,
         string keycloakUserId,
         string fullName,
-        string email,
-        string cpf,
+        Email email,
+        Cpf cpf,
         DateTime createdAt)
     {
         Id = id;
@@ -27,8 +28,8 @@ public sealed class DonorProfile
     public Guid Id { get; private set; }
     public string KeycloakUserId { get; private set; } = string.Empty;
     public string FullName { get; private set; } = string.Empty;
-    public string Email { get; private set; } = string.Empty;
-    public string Cpf { get; private set; } = string.Empty;
+    public Email Email { get; private set; }
+    public Cpf Cpf { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
@@ -36,7 +37,7 @@ public sealed class DonorProfile
     {
         var normalizedKeycloakUserId = keycloakUserId?.Trim() ?? string.Empty;
         var normalizedFullName = fullName?.Trim() ?? string.Empty;
-        var normalizedEmail = email?.Trim().ToLowerInvariant() ?? string.Empty;
+        var normalizedEmail = email?.Trim() ?? string.Empty;
         var normalizedCpf = cpf?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(normalizedKeycloakUserId))
@@ -59,19 +60,46 @@ public sealed class DonorProfile
             return Error.Validation("DonorProfile.CpfRequired", "CPF is required.");
         }
 
+        var emailResult = Email.Create(normalizedEmail);
+        if (emailResult.IsFailure)
+        {
+            return emailResult.Error;
+        }
+
+        var cpfResult = Cpf.Create(normalizedCpf);
+        if (cpfResult.IsFailure)
+        {
+            return cpfResult.Error;
+        }
+
         return new DonorProfile(
             Guid.NewGuid(),
             normalizedKeycloakUserId,
             normalizedFullName,
-            normalizedEmail,
-            normalizedCpf,
+            emailResult.Value,
+            cpfResult.Value,
             DateTime.UtcNow);
     }
 
-    public void Update(string fullName, string email)
+    public Result<DonorProfile> Update(string fullName, string email)
     {
-        FullName = fullName.Trim();
-        Email = email.Trim().ToLowerInvariant();
+        var normalizedFullName = fullName?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(normalizedFullName))
+        {
+            return Error.Validation("DonorProfile.FullNameRequired", "Full name is required.");
+        }
+
+        var emailResult = Email.Create(email);
+        if (emailResult.IsFailure)
+        {
+            return emailResult.Error;
+        }
+
+        FullName = normalizedFullName;
+        Email = emailResult.Value;
         UpdatedAt = DateTime.UtcNow;
+
+        return this;
     }
 }

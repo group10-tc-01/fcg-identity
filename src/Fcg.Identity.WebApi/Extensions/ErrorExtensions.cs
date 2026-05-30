@@ -1,4 +1,4 @@
-using Fcg.Identity.Domain.Results;
+using Fcg.Identity.Domain.Shared.Results;
 using Fcg.Identity.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
