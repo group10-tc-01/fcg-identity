@@ -10,13 +10,7 @@ public sealed class DonorProfile : BaseEntity
     {
     }
 
-    private DonorProfile(
-        Guid id,
-        string keycloakUserId,
-        string fullName,
-        Email email,
-        Cpf cpf)
-        : base(id)
+    private DonorProfile(Guid id, string keycloakUserId, string fullName, Email email, Cpf cpf) : base(id)
     {
         KeycloakUserId = keycloakUserId;
         FullName = fullName;

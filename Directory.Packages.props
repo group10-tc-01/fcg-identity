@@ -42,7 +42,8 @@
 
 	<ItemGroup Label="Identity provider">
 		<PackageVersion Include="Keycloak.AuthServices.Authentication" Version="2.7.0" />
-		<PackageVersion Include="Keycloak.AuthServices.Sdk" Version="2.7.0" />
+		<PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="8.0.1" />
+		<PackageVersion Include="Refit.HttpClientFactory" Version="10.1.6" />
 	</ItemGroup>
 
 	<ItemGroup Label="Persistence">

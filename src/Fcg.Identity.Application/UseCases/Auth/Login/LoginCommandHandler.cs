@@ -15,18 +15,12 @@ public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginRes
 
     public async Task<Result<LoginResponse>> Handle(LoginCommand command, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(command.Email))
-            return Error.Validation("Login.EmailRequired", "Email is required.");
-
-        if (string.IsNullOrWhiteSpace(command.Password))
-            return Error.Validation("Login.PasswordRequired", "Password is required.");
-
-        var loginResult = await _identityProvider.LoginAsync(
-            new LoginIdentityUserRequest(command.Email, command.Password),
-            cancellationToken);
+        var loginResult = await _identityProvider.LoginAsync(new LoginIdentityUserRequest(command.Email, command.Password), cancellationToken);
 
         if (loginResult.IsFailure)
+        {
             return loginResult.Error;
+        }
 
         return new LoginResponse(
             loginResult.Value.AccessToken,
