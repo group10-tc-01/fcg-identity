@@ -77,6 +77,62 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         }
     }
 
+    public async Task<Result<LoginIdentityUserResponse>> LoginAsync(
+        LoginIdentityUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var tokenRequest = new Dictionary<string, string>
+            {
+                ["grant_type"] = "password",
+                ["client_id"] = _settings.ClientId,
+                ["username"] = request.Email,
+                ["password"] = request.Password
+            };
+
+            using var response = await _httpClient.PostAsync(
+                BuildUri($"realms/{_settings.Realm}/protocol/openid-connect/token"),
+                new FormUrlEncodedContent(tokenRequest),
+                cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return Error.Unauthorized("IdentityProvider.InvalidCredentials", "Invalid email or password.");
+            }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                return Error.Failure("IdentityProvider.LoginFailed", "Could not authenticate with the identity provider.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return Error.Failure("IdentityProvider.LoginFailed", "Could not authenticate with the identity provider.");
+            }
+
+            var token = await response.Content.ReadFromJsonAsync<KeycloakTokenResponse>(JsonSerializerOptions, cancellationToken);
+            if (token is null || string.IsNullOrWhiteSpace(token.AccessToken))
+            {
+                return Error.Failure("IdentityProvider.TokenMissing", "The identity provider did not return an access token.");
+            }
+
+            return new LoginIdentityUserResponse(
+                token.AccessToken,
+                token.RefreshToken ?? string.Empty,
+                token.ExpiresIn,
+                token.TokenType);
+        }
+        catch (HttpRequestException)
+        {
+            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+        }
+        catch (TaskCanceledException)
+        {
+            return Error.Failure("IdentityProvider.Timeout", "The identity provider request timed out.");
+        }
+    }
+
     private async Task<Result<string>> GetAdminAccessTokenAsync(CancellationToken cancellationToken)
     {
         var tokenRequest = new Dictionary<string, string>
@@ -189,7 +245,8 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
             Credentials:
             [
                 new KeycloakCredentialRepresentation("password", request.Password, Temporary: false)
-            ]);
+            ],
+            RequiredActions: []);
     }
 
     private static string? GetCreatedUserId(HttpResponseMessage response)
@@ -197,7 +254,15 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         return response.Headers.Location?.Segments.LastOrDefault()?.TrimEnd('/');
     }
 
-    private sealed record KeycloakTokenResponse([property: JsonPropertyName("access_token")] string AccessToken);
+    private sealed record KeycloakTokenResponse(
+        [property: JsonPropertyName("access_token")] string AccessToken,
+        [property: JsonPropertyName("refresh_token")] string? RefreshToken,
+        [property: JsonPropertyName("expires_in")] int ExpiresIn,
+        [property: JsonPropertyName("token_type")] string TokenType);
+
+    private sealed record KeycloakErrorResponse(
+        [property: JsonPropertyName("error")] string? Error,
+        [property: JsonPropertyName("error_description")] string? ErrorDescription);
 
     private sealed record KeycloakUserRepresentation(
         string Username,
@@ -206,7 +271,8 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         string LastName,
         bool Enabled,
         bool EmailVerified,
-        KeycloakCredentialRepresentation[] Credentials);
+        KeycloakCredentialRepresentation[] Credentials,
+        string[] RequiredActions);
 
     private sealed record KeycloakCredentialRepresentation(
         string Type,

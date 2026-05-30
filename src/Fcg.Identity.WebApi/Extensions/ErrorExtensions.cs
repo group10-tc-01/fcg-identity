@@ -12,6 +12,7 @@ public static class ErrorExtensions
             ErrorType.NotFound => new NotFoundObjectResult(ApiResponse<string>.FromFailure(error.Message)),
             ErrorType.Conflict => new ConflictObjectResult(ApiResponse<string>.FromFailure(error.Message)),
             ErrorType.Validation => new BadRequestObjectResult(ApiResponse<string>.FromFailure(error.Message)),
+            ErrorType.Unauthorized => new UnauthorizedObjectResult(ApiResponse<string>.FromFailure(error.Message)),
             _ => new ObjectResult(ApiResponse<string>.FromFailure(error.Message)) { StatusCode = StatusCodes.Status500InternalServerError }
         };
 }

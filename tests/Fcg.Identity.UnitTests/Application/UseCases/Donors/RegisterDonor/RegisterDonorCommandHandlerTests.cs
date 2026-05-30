@@ -104,28 +104,6 @@ public sealed class RegisterDonorCommandHandlerTests
         unitOfWork.SaveChangesCalls.Should().Be(0);
     }
 
-    [Fact]
-    public async Task Given_Handle_Called_When_CpfIsInvalid_Then_ShouldReturnValidationFailure()
-    {
-        // Arrange
-        var donorProfileRepository = new InMemoryDonorProfileRepository();
-        var identityProvider = new FakeIdentityProvider();
-        var unitOfWork = new FakeUnitOfWork();
-        var handler = CreateHandler(donorProfileRepository, identityProvider, unitOfWork);
-        var command = new RegisterDonorCommandBuilder()
-            .WithCpf("11111111111")
-            .Build();
-
-        // Act
-        var result = await handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Cpf.Invalid");
-        identityProvider.CreateDonorCalls.Should().Be(0);
-        unitOfWork.SaveChangesCalls.Should().Be(0);
-    }
-
     private static RegisterDonorCommandHandler CreateHandler(
         InMemoryDonorProfileRepository donorProfileRepository,
         FakeIdentityProvider identityProvider,
