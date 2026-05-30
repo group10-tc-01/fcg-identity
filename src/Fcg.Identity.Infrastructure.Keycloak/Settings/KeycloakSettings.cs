@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Fcg.Identity.Infrastructure.Keycloak.Settings;
 
+[ExcludeFromCodeCoverage]
 public sealed class KeycloakSettings
 {
     public const string SectionName = "Keycloak";
@@ -23,6 +25,7 @@ public sealed class KeycloakSettings
     public KeycloakRetrySettings Retry { get; set; } = new();
 }
 
+[ExcludeFromCodeCoverage]
 public sealed class KeycloakRetrySettings
 {
     public int RetryCount { get; set; } = 3;

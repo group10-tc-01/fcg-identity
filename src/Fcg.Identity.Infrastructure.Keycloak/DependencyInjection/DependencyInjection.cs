@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Infrastructure.Keycloak.Http;
@@ -12,6 +13,7 @@ using Refit;
 
 namespace Fcg.Identity.Infrastructure.Keycloak.DependencyInjection;
 
+[ExcludeFromCodeCoverage]
 public static class DependencyInjection
 {
     public static IServiceCollection AddKeycloakInfrastructure(this IServiceCollection services, IConfiguration configuration)

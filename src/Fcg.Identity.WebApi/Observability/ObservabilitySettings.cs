@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Fcg.Identity.WebApi.Observability;
 
+[ExcludeFromCodeCoverage]
 public sealed class ObservabilitySettings
 {
     public const string SectionName = "Observability";
