@@ -1,9 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
+using Fcg.Identity.Application.Abstractions.Authentication;
 using Fcg.Identity.Infrastructure.SqlServer.Persistence;
+using Fcg.Identity.WebApi.Authentication;
 using Fcg.Identity.WebApi.Filters;
 using Fcg.Identity.WebApi.Observability;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Sinks.OpenTelemetry;
@@ -22,10 +27,12 @@ public static class DependencyInjection
 
         services.AddEndpointsApiExplorer();
         services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
         services.AddSwaggerConfiguration(configuration);
 
         services.AddVersioning();
         services.AddFilters();
+        services.AddAuthenticationConfiguration(configuration);
         services.AddAuthorization();
         services.AddHealthChecks().AddDbContextCheck<FcgIdentityDbContext>();
         services.AddRouting(options => options.LowercaseUrls = true);
@@ -90,6 +97,28 @@ public static class DependencyInjection
             options.GroupNameFormat = "'v'VVV";
             options.SubstituteApiVersionInUrl = true;
         });
+    }
+
+    private static void AddAuthenticationConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        var keycloakSection = configuration.GetRequiredSection("Keycloak");
+        var authority = $"{keycloakSection.GetValue<string>("BaseUrl")}/realms/{keycloakSection.GetValue<string>("Realm")}";
+        var audience = keycloakSection.GetValue<string>("ClientId");
+
+        services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.Authority = authority;
+                options.Audience = audience;
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = false,
+                    NameClaimType = "preferred_username",
+                    RoleClaimType = ClaimTypes.Role
+                };
+            });
     }
 
     private static void AddFilters(this IServiceCollection services)

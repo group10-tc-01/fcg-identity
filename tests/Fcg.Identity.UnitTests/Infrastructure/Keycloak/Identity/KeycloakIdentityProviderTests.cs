@@ -175,6 +175,46 @@ public sealed class KeycloakIdentityProviderTests
         result.Error.Type.Should().Be(ErrorType.Unauthorized);
     }
 
+    [Fact]
+    public async Task Given_RefreshTokenAsync_Called_When_KeycloakReturnsToken_Then_ShouldReturnToken()
+    {
+        // Arrange
+        var keycloakApi = new FakeKeycloakApi();
+        var provider = CreateProvider(keycloakApi);
+        var request = new RefreshTokenIdentityUserRequest("refresh-token");
+
+        // Act
+        var result = await provider.RefreshTokenAsync(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.AccessToken.Should().Be("access-token");
+        result.Value.RefreshToken.Should().Be("refresh-token");
+        keycloakApi.LastTokenForm.Should().NotBeNull();
+        keycloakApi.LastTokenForm!["grant_type"].Should().Be("refresh_token");
+        keycloakApi.LastTokenForm["client_id"].Should().Be("solidarity-api");
+        keycloakApi.LastTokenForm["refresh_token"].Should().Be(request.RefreshToken);
+    }
+
+    [Fact]
+    public async Task Given_RefreshTokenAsync_Called_When_KeycloakReturnsUnauthorized_Then_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var keycloakApi = new FakeKeycloakApi
+        {
+            LoginTokenResponse = CreateApiResponse<KeycloakTokenResponse>(HttpStatusCode.Unauthorized, null)
+        };
+        var provider = CreateProvider(keycloakApi);
+
+        // Act
+        var result = await provider.RefreshTokenAsync(new RefreshTokenIdentityUserRequest("invalid-refresh-token"), CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("IdentityProvider.InvalidRefreshToken");
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+    }
+
     private static CreateDonorIdentityUserRequest CreateDonorRequest()
     {
         return new CreateDonorIdentityUserRequest("Maria Silva", "maria@email.com", "StrongPassword123!");
@@ -222,6 +262,7 @@ public sealed class KeycloakIdentityProviderTests
         public int AssignRealmRolesCalls { get; private set; }
         public int DeleteUserCalls { get; private set; }
         public CreateKeycloakUserRequest? LastCreateUserRequest { get; private set; }
+        public Dictionary<string, string>? LastTokenForm { get; private set; }
 
         public ApiResponse<KeycloakTokenResponse> AdminTokenResponse { get; set; } =
             CreateApiResponse(HttpStatusCode.OK, new KeycloakTokenResponse("admin-token", null, 300, "Bearer"));
@@ -250,6 +291,8 @@ public sealed class KeycloakIdentityProviderTests
             Dictionary<string, string> form,
             CancellationToken cancellationToken)
         {
+            LastTokenForm = form;
+
             return Task.FromResult(realm == "master" ? AdminTokenResponse : LoginTokenResponse);
         }
 

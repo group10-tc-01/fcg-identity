@@ -14,7 +14,9 @@ public sealed class LoginCommandHandlerTests
         // Arrange
         var identityProvider = new FakeIdentityProvider();
         identityProvider.ConfigureLoginResult(new LoginIdentityUserResponse("access-token", "refresh-token", 300, "Bearer"));
-        var handler = new LoginCommandHandler(identityProvider);
+        var auditLogRepository = new InMemoryAuditLogRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var handler = new LoginCommandHandler(identityProvider, auditLogRepository, unitOfWork);
         var command = new LoginCommand("doador@email.com", "Password123!");
 
         // Act
@@ -28,6 +30,8 @@ public sealed class LoginCommandHandlerTests
         result.Value.TokenType.Should().Be("Bearer");
         identityProvider.LoginCalls.Should().Be(1);
         identityProvider.LastLoginRequest.Should().BeEquivalentTo(new LoginIdentityUserRequest(command.Email, command.Password));
+        auditLogRepository.AuditLogs.Should().ContainSingle(auditLog => auditLog.Action == "LoginSucceeded");
+        unitOfWork.SaveChangesCalls.Should().Be(1);
     }
 
     [Fact]
@@ -36,7 +40,9 @@ public sealed class LoginCommandHandlerTests
         // Arrange
         var identityProvider = new FakeIdentityProvider();
         identityProvider.ConfigureLoginResult(Error.Unauthorized("IdentityProvider.InvalidCredentials", "Invalid email or password."));
-        var handler = new LoginCommandHandler(identityProvider);
+        var auditLogRepository = new InMemoryAuditLogRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var handler = new LoginCommandHandler(identityProvider, auditLogRepository, unitOfWork);
         var command = new LoginCommand("doador@email.com", "wrong-password");
 
         // Act
@@ -46,5 +52,7 @@ public sealed class LoginCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("IdentityProvider.InvalidCredentials");
         identityProvider.LoginCalls.Should().Be(1);
+        auditLogRepository.AuditLogs.Should().ContainSingle(auditLog => auditLog.Action == "LoginFailed");
+        unitOfWork.SaveChangesCalls.Should().Be(1);
     }
 }

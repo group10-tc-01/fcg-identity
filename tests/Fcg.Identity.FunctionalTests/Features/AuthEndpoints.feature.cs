@@ -38,15 +38,15 @@ namespace Fcg.Identity.FunctionalTests.Features
         {
             this._testOutputHelper = testOutputHelper;
         }
-        
+
         public static async System.Threading.Tasks.Task FeatureSetupAsync()
         {
         }
-        
+
         public static async System.Threading.Tasks.Task FeatureTearDownAsync()
         {
         }
-        
+
         public async System.Threading.Tasks.Task TestInitializeAsync()
         {
             testRunner = global::Reqnroll.TestRunnerManager.GetTestRunnerForAssembly(featureHint: featureInfo);
@@ -207,14 +207,14 @@ this.ScenarioInitialize(scenarioInfo);
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Recusar registro de doador inválido")]
+        [Xunit.SkippableFactAttribute(DisplayName="Renovar token com sucesso")]
         [Xunit.TraitAttribute("FeatureTitle", "Endpoints de autenticação")]
-        [Xunit.TraitAttribute("Description", "Recusar registro de doador inválido")]
-        public async System.Threading.Tasks.Task RecusarRegistroDeDoadorInvalido()
+        [Xunit.TraitAttribute("Description", "Renovar token com sucesso")]
+        public async System.Threading.Tasks.Task RenovarTokenComSucesso()
         {
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Recusar registro de doador inválido", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Renovar token com sucesso", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 29
 this.ScenarioInitialize(scenarioInfo);
 #line hidden
@@ -226,15 +226,129 @@ this.ScenarioInitialize(scenarioInfo);
             {
                 await this.ScenarioStartAsync();
 #line 30
-  await testRunner.GivenAsync("que tenho uma requisição inválida para registrar um doador", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
+  await testRunner.GivenAsync("que tenho uma requisição válida para renovar token", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
 #line hidden
 #line 31
-  await testRunner.WhenAsync("eu enviar a requisição para registrar o doador", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
+  await testRunner.WhenAsync("eu enviar a requisição para renovar token", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
 #line hidden
 #line 32
-  await testRunner.ThenAsync("a resposta deve ter status 400", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
+  await testRunner.ThenAsync("a resposta deve ter status 200", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
 #line hidden
 #line 33
+  await testRunner.AndAsync("a resposta deve indicar sucesso", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+#line 34
+  await testRunner.AndAsync("a resposta deve conter o novo token de acesso", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+
+        [Xunit.SkippableFactAttribute(DisplayName="Recusar renovação com refresh token inválido")]
+        [Xunit.TraitAttribute("FeatureTitle", "Endpoints de autenticação")]
+        [Xunit.TraitAttribute("Description", "Recusar renovação com refresh token inválido")]
+        public async System.Threading.Tasks.Task RecusarRenovacaoComRefreshTokenInvalido()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Recusar renovação com refresh token inválido", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 36
+this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 37
+  await testRunner.GivenAsync("que o provedor de identidade recusará o refresh token", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
+#line hidden
+#line 38
+  await testRunner.AndAsync("que tenho uma requisição com refresh token inválido", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+#line 39
+  await testRunner.WhenAsync("eu enviar a requisição para renovar token", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
+#line hidden
+#line 40
+  await testRunner.ThenAsync("a resposta deve ter status 401", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
+#line hidden
+#line 41
+  await testRunner.AndAsync("a resposta deve indicar falha", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+#line 42
+  await testRunner.AndAsync("a mensagem da resposta deve ser \"Invalid refresh token.\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+
+        [Xunit.SkippableFactAttribute(DisplayName="Consultar perfil autenticado de doador")]
+        [Xunit.TraitAttribute("FeatureTitle", "Endpoints de autenticação")]
+        [Xunit.TraitAttribute("Description", "Consultar perfil autenticado de doador")]
+        public async System.Threading.Tasks.Task ConsultarPerfilAutenticadoDeDoador()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Consultar perfil autenticado de doador", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 44
+this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 45
+  await testRunner.GivenAsync("que existe um perfil de doador autenticado", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
+#line hidden
+#line 46
+  await testRunner.WhenAsync("eu consultar meu perfil", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
+#line hidden
+#line 47
+  await testRunner.ThenAsync("a resposta deve ter status 200", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
+#line hidden
+#line 48
+  await testRunner.AndAsync("a resposta deve indicar sucesso", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+#line 49
+  await testRunner.AndAsync("a resposta deve conter o perfil do doador autenticado", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+
+        [Xunit.SkippableFactAttribute(DisplayName="Recusar registro de doador inválido")]
+        [Xunit.TraitAttribute("FeatureTitle", "Endpoints de autenticação")]
+        [Xunit.TraitAttribute("Description", "Recusar registro de doador inválido")]
+        public async System.Threading.Tasks.Task RecusarRegistroDeDoadorInvalido()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Recusar registro de doador inválido", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 51
+this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 52
+  await testRunner.GivenAsync("que tenho uma requisição inválida para registrar um doador", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
+#line hidden
+#line 53
+  await testRunner.WhenAsync("eu enviar a requisição para registrar o doador", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
+#line hidden
+#line 54
+  await testRunner.ThenAsync("a resposta deve ter status 400", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
+#line hidden
+#line 55
   await testRunner.AndAsync("a resposta deve indicar falha", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
 #line hidden
             }

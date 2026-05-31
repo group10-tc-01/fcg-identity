@@ -2,11 +2,16 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Fcg.Identity.Application.UseCases.Auth.Login;
+using Fcg.Identity.Application.UseCases.Auth.RefreshToken;
 using Fcg.Identity.Application.UseCases.Donors.RegisterDonor;
+using Fcg.Identity.Application.UseCases.Profiles.GetMe;
+using Fcg.Identity.CommomTestsUtilities.Builders.DonorProfiles;
 using Fcg.Identity.CommomTestsUtilities.Builders.Donors;
+using Fcg.Identity.Domain.DonorProfiles;
+using Fcg.Identity.Domain.Shared;
 using Fcg.Identity.Domain.Shared.Results;
 using Fcg.Identity.FunctionalTests.Configurations;
-using Fcg.Identity.WebApi.Controllers.v1;
+using Fcg.Identity.FunctionalTests.Support;
 using Fcg.Identity.WebApi.Models;
 using FluentAssertions;
 using Reqnroll;
@@ -20,6 +25,8 @@ public sealed class AuthEndpointStepDefinitions
     private readonly HttpClient _client;
     private RegisterDonorCommand? _registerDonorCommand;
     private LoginCommand? _loginCommand;
+    private RefreshTokenCommand? _refreshTokenCommand;
+    private DonorProfile? _authenticatedDonorProfile;
     private HttpResponseMessage? _response;
     private string? _responseBody;
 
@@ -37,6 +44,10 @@ public sealed class AuthEndpointStepDefinitions
         _responseBody = null;
         _registerDonorCommand = null;
         _loginCommand = null;
+        _refreshTokenCommand = null;
+        _authenticatedDonorProfile = null;
+        _client.DefaultRequestHeaders.Remove(TestAuthenticationHandler.KeycloakUserIdHeader);
+        _client.DefaultRequestHeaders.Remove(TestAuthenticationHandler.RoleHeader);
     }
 
     [Given("que tenho uma requisição válida para registrar um doador")]
@@ -73,6 +84,37 @@ public sealed class AuthEndpointStepDefinitions
         _loginCommand = new LoginCommand("doador@email.com", "wrong-password");
     }
 
+    [Given("que tenho uma requisição válida para renovar token")]
+    public void Given_QueTenhoUmaRequisicaoValidaParaRenovarToken()
+    {
+        _refreshTokenCommand = new RefreshTokenCommand("refresh-token");
+    }
+
+    [Given("que o provedor de identidade recusará o refresh token")]
+    public void Given_QueOProvedorDeIdentidadeRecusaraORefreshToken()
+    {
+        _factory.IdentityProvider.ConfigureRefreshTokenResult(
+            Error.Unauthorized("IdentityProvider.InvalidRefreshToken", "Invalid refresh token."));
+    }
+
+    [Given("que tenho uma requisição com refresh token inválido")]
+    public void Given_QueTenhoUmaRequisicaoComRefreshTokenInvalido()
+    {
+        _refreshTokenCommand = new RefreshTokenCommand("invalid-refresh-token");
+    }
+
+    [Given("que existe um perfil de doador autenticado")]
+    public async Task Given_QueExisteUmPerfilDeDoadorAutenticado()
+    {
+        _authenticatedDonorProfile = new DonorProfileBuilder().Build();
+        await _factory.DonorProfileRepository.AddAsync(_authenticatedDonorProfile);
+
+        _client.DefaultRequestHeaders.Remove(TestAuthenticationHandler.KeycloakUserIdHeader);
+        _client.DefaultRequestHeaders.Remove(TestAuthenticationHandler.RoleHeader);
+        _client.DefaultRequestHeaders.Add(TestAuthenticationHandler.KeycloakUserIdHeader, _authenticatedDonorProfile.KeycloakUserId);
+        _client.DefaultRequestHeaders.Add(TestAuthenticationHandler.RoleHeader, IdentityRoles.Donor);
+    }
+
     [When("eu enviar a requisição para registrar o doador")]
     public async Task When_EuEnviarARequisicaoParaRegistrarODoador()
     {
@@ -87,6 +129,20 @@ public sealed class AuthEndpointStepDefinitions
         _loginCommand.Should().NotBeNull();
 
         await SendAsync(() => _client.PostAsJsonAsync("/api/v1/auth/login", _loginCommand));
+    }
+
+    [When("eu enviar a requisição para renovar token")]
+    public async Task When_EuEnviarARequisicaoParaRenovarToken()
+    {
+        _refreshTokenCommand.Should().NotBeNull();
+
+        await SendAsync(() => _client.PostAsJsonAsync("/api/v1/auth/refresh", _refreshTokenCommand));
+    }
+
+    [When("eu consultar meu perfil")]
+    public async Task When_EuConsultarMeuPerfil()
+    {
+        await SendAsync(() => _client.GetAsync("/api/v1/me"));
     }
 
     [Then("a resposta deve ter status {int}")]
@@ -128,6 +184,27 @@ public sealed class AuthEndpointStepDefinitions
 
         payload.Data.Should().NotBeNull();
         payload.Data!.AccessToken.Should().Be("access-token");
+    }
+
+    [Then("a resposta deve conter o novo token de acesso")]
+    public async Task Then_ARespostaDeveConterONovoTokenDeAcesso()
+    {
+        var payload = await ReadResponseAsync<LoginResponse>();
+
+        payload.Data.Should().NotBeNull();
+        payload.Data!.AccessToken.Should().Be("new-access-token");
+    }
+
+    [Then("a resposta deve conter o perfil do doador autenticado")]
+    public async Task Then_ARespostaDeveConterOPerfilDoDoadorAutenticado()
+    {
+        _authenticatedDonorProfile.Should().NotBeNull();
+
+        var payload = await ReadResponseAsync<GetMeResponse>();
+
+        payload.Data.Should().NotBeNull();
+        payload.Data!.Id.Should().Be(_authenticatedDonorProfile!.Id);
+        payload.Data.Role.Should().Be(IdentityRoles.Donor);
     }
 
     [Then("a mensagem da resposta deve ser {string}")]

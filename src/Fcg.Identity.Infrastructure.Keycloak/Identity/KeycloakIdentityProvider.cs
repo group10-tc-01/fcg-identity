@@ -103,16 +103,47 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 return Error.Failure("IdentityProvider.LoginFailed", "Could not authenticate with the identity provider.");
             }
 
-            if (tokenResponse.Content is null || string.IsNullOrWhiteSpace(tokenResponse.Content.AccessToken))
+            return MapTokenResponse(tokenResponse.Content);
+        }
+        catch (ApiException)
+        {
+            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+        }
+        catch (HttpRequestException)
+        {
+            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+        }
+        catch (TaskCanceledException)
+        {
+            return Error.Failure("IdentityProvider.Timeout", "The identity provider request timed out.");
+        }
+    }
+
+    public async Task<Result<LoginIdentityUserResponse>> RefreshTokenAsync(RefreshTokenIdentityUserRequest request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var tokenResponse = await _keycloakApi.GetTokenAsync(
+                _keycloakSettings.Realm,
+                new Dictionary<string, string>
+                {
+                    ["grant_type"] = "refresh_token",
+                    ["client_id"] = _keycloakSettings.ClientId,
+                    ["refresh_token"] = request.RefreshToken
+                },
+                cancellationToken);
+
+            if (tokenResponse.StatusCode == HttpStatusCode.Unauthorized)
             {
-                return Error.Failure("IdentityProvider.TokenMissing", "The identity provider did not return an access token.");
+                return Error.Unauthorized("IdentityProvider.InvalidRefreshToken", "Invalid refresh token.");
             }
 
-            return new LoginIdentityUserResponse(
-                tokenResponse.Content.AccessToken,
-                tokenResponse.Content.RefreshToken ?? string.Empty,
-                tokenResponse.Content.ExpiresIn,
-                tokenResponse.Content.TokenType);
+            if (!tokenResponse.IsSuccessStatusCode)
+            {
+                return Error.Failure("IdentityProvider.RefreshTokenFailed", "Could not refresh token with the identity provider.");
+            }
+
+            return MapTokenResponse(tokenResponse.Content);
         }
         catch (ApiException)
         {
@@ -230,6 +261,20 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 new KeycloakCredential("password", request.Password, Temporary: false)
             ],
             RequiredActions: []);
+    }
+
+    private static Result<LoginIdentityUserResponse> MapTokenResponse(KeycloakTokenResponse? tokenResponse)
+    {
+        if (tokenResponse is null || string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
+        {
+            return Error.Failure("IdentityProvider.TokenMissing", "The identity provider did not return an access token.");
+        }
+
+        return new LoginIdentityUserResponse(
+            tokenResponse.AccessToken,
+            tokenResponse.RefreshToken ?? string.Empty,
+            tokenResponse.ExpiresIn,
+            tokenResponse.TokenType);
     }
 
     private static (string FirstName, string LastName) SplitFullName(string fullName)

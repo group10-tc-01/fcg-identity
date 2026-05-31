@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using Fcg.Identity.Domain.Abstractions;
+using Fcg.Identity.Domain.AuditLogs;
 using Fcg.Identity.Domain.DonorProfiles;
+using Fcg.Identity.Domain.ManagerProfiles;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fcg.Identity.Infrastructure.SqlServer.Persistence;
@@ -13,6 +15,8 @@ public sealed class FcgIdentityDbContext : DbContext, IUnitOfWork
     }
 
     public DbSet<DonorProfile> DonorProfiles => Set<DonorProfile>();
+    public DbSet<ManagerProfile> ManagerProfiles => Set<ManagerProfile>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

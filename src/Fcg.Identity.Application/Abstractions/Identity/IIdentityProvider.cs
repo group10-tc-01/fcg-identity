@@ -11,4 +11,8 @@ public interface IIdentityProvider
     Task<Result<LoginIdentityUserResponse>> LoginAsync(
         LoginIdentityUserRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<Result<LoginIdentityUserResponse>> RefreshTokenAsync(
+        RefreshTokenIdentityUserRequest request,
+        CancellationToken cancellationToken = default);
 }

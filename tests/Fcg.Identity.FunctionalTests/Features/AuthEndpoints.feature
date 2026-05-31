@@ -26,6 +26,28 @@ Cenário: Recusar login com credenciais inválidas
   E a resposta deve indicar falha
   E a mensagem da resposta deve ser "Invalid email or password."
 
+Cenário: Renovar token com sucesso
+  Dado que tenho uma requisição válida para renovar token
+  Quando eu enviar a requisição para renovar token
+  Então a resposta deve ter status 200
+  E a resposta deve indicar sucesso
+  E a resposta deve conter o novo token de acesso
+
+Cenário: Recusar renovação com refresh token inválido
+  Dado que o provedor de identidade recusará o refresh token
+  E que tenho uma requisição com refresh token inválido
+  Quando eu enviar a requisição para renovar token
+  Então a resposta deve ter status 401
+  E a resposta deve indicar falha
+  E a mensagem da resposta deve ser "Invalid refresh token."
+
+Cenário: Consultar perfil autenticado de doador
+  Dado que existe um perfil de doador autenticado
+  Quando eu consultar meu perfil
+  Então a resposta deve ter status 200
+  E a resposta deve indicar sucesso
+  E a resposta deve conter o perfil do doador autenticado
+
 Cenário: Recusar registro de doador inválido
   Dado que tenho uma requisição inválida para registrar um doador
   Quando eu enviar a requisição para registrar o doador
