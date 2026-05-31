@@ -1,4 +1,5 @@
 using Fcg.Identity.Application.UseCases.Auth.Login;
+using Fcg.Identity.Application.UseCases.Auth.RefreshToken;
 using Fcg.Identity.Application.UseCases.Donors.RegisterDonor;
 using Fcg.Identity.WebApi.Extensions;
 using Fcg.Identity.WebApi.Models;
@@ -28,6 +29,19 @@ public sealed class AuthController(IMediator mediator) : BaseApiController(media
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return result.Match<IActionResult>(
+            response => Ok(ApiResponse<LoginResponse>.FromSuccess(response)),
+            error => error.ToActionResult());
+    }
+
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(command, cancellationToken);
 

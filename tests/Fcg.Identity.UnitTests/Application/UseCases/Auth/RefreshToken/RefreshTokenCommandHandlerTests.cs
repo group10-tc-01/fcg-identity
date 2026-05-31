@@ -1,0 +1,56 @@
+using Fcg.Identity.Application.Abstractions.Identity;
+using Fcg.Identity.Application.UseCases.Auth.RefreshToken;
+using Fcg.Identity.CommomTestsUtilities.TestDoubles;
+using Fcg.Identity.Domain.Shared.Results;
+using FluentAssertions;
+
+namespace Fcg.Identity.UnitTests.Application.UseCases.Auth.RefreshToken;
+
+public sealed class RefreshTokenCommandHandlerTests
+{
+    [Fact]
+    public async Task Given_Handle_Called_When_RefreshTokenIsValid_Then_ShouldReturnTokenResponse()
+    {
+        // Arrange
+        var identityProvider = new FakeIdentityProvider();
+        identityProvider.ConfigureRefreshTokenResult(new LoginIdentityUserResponse("new-access-token", "new-refresh-token", 300, "Bearer"));
+        var auditLogRepository = new InMemoryAuditLogRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var handler = new RefreshTokenCommandHandler(identityProvider, auditLogRepository, unitOfWork);
+        var command = new RefreshTokenCommand("refresh-token");
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.AccessToken.Should().Be("new-access-token");
+        result.Value.RefreshToken.Should().Be("new-refresh-token");
+        result.Value.ExpiresIn.Should().Be(300);
+        result.Value.TokenType.Should().Be("Bearer");
+        identityProvider.RefreshTokenCalls.Should().Be(1);
+        identityProvider.LastRefreshTokenRequest.Should().BeEquivalentTo(new RefreshTokenIdentityUserRequest(command.RefreshToken));
+        auditLogRepository.AuditLogs.Should().ContainSingle(auditLog => auditLog.Action == "TokenRefreshed");
+        unitOfWork.SaveChangesCalls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Given_Handle_Called_When_RefreshTokenIsInvalid_Then_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var identityProvider = new FakeIdentityProvider();
+        identityProvider.ConfigureRefreshTokenResult(Error.Unauthorized("IdentityProvider.InvalidRefreshToken", "Invalid refresh token."));
+        var auditLogRepository = new InMemoryAuditLogRepository();
+        var unitOfWork = new FakeUnitOfWork();
+        var handler = new RefreshTokenCommandHandler(identityProvider, auditLogRepository, unitOfWork);
+        var command = new RefreshTokenCommand("invalid-refresh-token");
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("IdentityProvider.InvalidRefreshToken");
+        identityProvider.RefreshTokenCalls.Should().Be(1);
+    }
+}

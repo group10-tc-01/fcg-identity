@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.UseCases.Auth.Login;
+using Fcg.Identity.Application.UseCases.Auth.RefreshToken;
 using Fcg.Identity.Application.UseCases.Donors.RegisterDonor;
 using Fcg.Identity.CommomTestsUtilities.Builders.DonorProfiles;
 using Fcg.Identity.CommomTestsUtilities.Builders.Donors;
@@ -10,7 +11,6 @@ using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.Shared.Results;
 using Fcg.Identity.IntegratedTests.Configurations;
 using Fcg.Identity.IntegratedTests.Support;
-using Fcg.Identity.WebApi.Controllers.v1;
 using Fcg.Identity.WebApi.Models;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -196,6 +196,62 @@ public sealed class AuthControllerTests : IAsyncLifetime
         payload!.Success.Should().BeFalse();
         payload.Message.Should().Be("Invalid email or password.");
         _factory.IdentityProvider.LoginCalls.Should().Be(1);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RefreshEndpoint_Called_When_RequestIsValid_Then_ShouldReturnOk()
+    {
+        // Arrange
+        var command = new RefreshTokenCommand("refresh-token");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeTrue();
+        payload.Data.Should().NotBeNull();
+        payload.Data!.AccessToken.Should().Be("new-access-token");
+        _factory.IdentityProvider.RefreshTokenCalls.Should().Be(1);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RefreshEndpoint_Called_When_RequestIsInvalid_Then_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var command = new RefreshTokenCommand(string.Empty);
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        _factory.IdentityProvider.RefreshTokenCalls.Should().Be(0);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RefreshEndpoint_Called_When_RefreshTokenIsInvalid_Then_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        _factory.IdentityProvider.ConfigureRefreshTokenResult(
+            Error.Unauthorized("IdentityProvider.InvalidRefreshToken", "Invalid refresh token."));
+        var command = new RefreshTokenCommand("invalid-refresh-token");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        payload.Message.Should().Be("Invalid refresh token.");
+        _factory.IdentityProvider.RefreshTokenCalls.Should().Be(1);
     }
 
     private async Task SaveDonorProfileAsync(DonorProfile donorProfile)

@@ -59,7 +59,8 @@ public static class ObservabilityTelemetry
             .SetResourceBuilder(resourceBuilder)
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
-            .AddRuntimeInstrumentation();
+            .AddRuntimeInstrumentation()
+            .AddPrometheusExporter();
 
         if (settings.EnableOtlpExporter)
         {

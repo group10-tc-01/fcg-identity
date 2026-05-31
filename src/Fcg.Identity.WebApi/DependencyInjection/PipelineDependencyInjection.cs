@@ -37,9 +37,11 @@ public static class PipelineDependencyInjection
             }
 
         });
+        app.MapPrometheusScrapingEndpoint("/metrics");
 
         app.UseHttpsRedirection();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();

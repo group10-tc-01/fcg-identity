@@ -2,7 +2,9 @@ using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Abstractions.Messaging;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
 using Fcg.Identity.Infrastructure.SqlServer.Persistence;
+using Fcg.Identity.IntegratedTests.Support;
 using Fcg.Identity.WebApi;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +46,8 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         var dbContext = scope.ServiceProvider.GetRequiredService<FcgIdentityDbContext>();
 
         dbContext.DonorProfiles.RemoveRange(dbContext.DonorProfiles);
+        dbContext.ManagerProfiles.RemoveRange(dbContext.ManagerProfiles);
+        dbContext.AuditLogs.RemoveRange(dbContext.AuditLogs);
         await dbContext.SaveChangesAsync();
     }
 
@@ -66,6 +70,13 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
             services.AddSingleton<IIdentityProvider>(IdentityProvider);
             services.AddSingleton<IMessagePublisher>(MessagePublisher);
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TestAuthenticationHandler.SchemeName;
+                    options.DefaultChallengeScheme = TestAuthenticationHandler.SchemeName;
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(TestAuthenticationHandler.SchemeName, _ => { });
         });
     }
 }

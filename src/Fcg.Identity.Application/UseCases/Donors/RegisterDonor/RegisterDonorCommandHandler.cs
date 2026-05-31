@@ -1,6 +1,7 @@
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Abstractions.Messaging;
 using Fcg.Identity.Domain.Abstractions;
+using Fcg.Identity.Domain.AuditLogs;
 using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.Shared.Results;
 
@@ -9,15 +10,18 @@ namespace Fcg.Identity.Application.UseCases.Donors.RegisterDonor;
 public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorCommand, RegisterDonorResponse>
 {
     private readonly IDonorProfileRepository _donorProfileRepository;
+    private readonly IAuditLogRepository _auditLogRepository;
     private readonly IIdentityProvider _identityProvider;
     private readonly IUnitOfWork _unitOfWork;
 
     public RegisterDonorCommandHandler(
         IDonorProfileRepository donorProfileRepository,
+        IAuditLogRepository auditLogRepository,
         IIdentityProvider identityProvider,
         IUnitOfWork unitOfWork)
     {
         _donorProfileRepository = donorProfileRepository;
+        _auditLogRepository = auditLogRepository;
         _identityProvider = identityProvider;
         _unitOfWork = unitOfWork;
     }
@@ -60,6 +64,14 @@ public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorC
         var donorProfile = donorProfileResult.Value;
 
         await _donorProfileRepository.AddAsync(donorProfile, cancellationToken);
+        await _auditLogRepository.AddAsync(
+            AuditLog.Create(
+                AuditActions.DonorRegistered,
+                nameof(DonorProfile),
+                actorId: donorProfile.Id,
+                actorType: "Doador",
+                entityId: donorProfile.Id.ToString()).Value,
+            cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new RegisterDonorResponse(

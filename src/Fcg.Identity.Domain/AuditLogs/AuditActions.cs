@@ -1,0 +1,9 @@
+namespace Fcg.Identity.Domain.AuditLogs;
+
+public static class AuditActions
+{
+    public const string DonorRegistered = "DonorRegistered";
+    public const string LoginSucceeded = "LoginSucceeded";
+    public const string LoginFailed = "LoginFailed";
+    public const string TokenRefreshed = "TokenRefreshed";
+}
