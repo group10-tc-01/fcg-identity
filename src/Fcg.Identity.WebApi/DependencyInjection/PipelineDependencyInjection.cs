@@ -24,8 +24,9 @@ public static class PipelineDependencyInjection
         app.UseSwagger();
         app.UseSwaggerUI();
 
-        app.UseCustomerExceptionHandler();
         app.UseGlobalCorrelationId();
+        app.UseRequestFlowLogging();
+        app.UseCustomerExceptionHandler();
 
         app.MapHealthChecks("/health", new HealthCheckOptions
         {

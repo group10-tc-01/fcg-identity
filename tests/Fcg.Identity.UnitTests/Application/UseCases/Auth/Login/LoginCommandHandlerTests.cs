@@ -3,6 +3,7 @@ using Fcg.Identity.Application.UseCases.Auth.Login;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
 using Fcg.Identity.Domain.Shared.Results;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Fcg.Identity.UnitTests.Application.UseCases.Auth.Login;
 
@@ -16,7 +17,7 @@ public sealed class LoginCommandHandlerTests
         identityProvider.ConfigureLoginResult(new LoginIdentityUserResponse("access-token", "refresh-token", 300, "Bearer"));
         var auditLogRepository = new InMemoryAuditLogRepository();
         var unitOfWork = new FakeUnitOfWork();
-        var handler = new LoginCommandHandler(identityProvider, auditLogRepository, unitOfWork);
+        var handler = new LoginCommandHandler(identityProvider, auditLogRepository, unitOfWork, NullLogger<LoginCommandHandler>.Instance);
         var command = new LoginCommand("doador@email.com", "Password123!");
 
         // Act
@@ -42,7 +43,7 @@ public sealed class LoginCommandHandlerTests
         identityProvider.ConfigureLoginResult(Error.Unauthorized("IdentityProvider.InvalidCredentials", "Invalid email or password."));
         var auditLogRepository = new InMemoryAuditLogRepository();
         var unitOfWork = new FakeUnitOfWork();
-        var handler = new LoginCommandHandler(identityProvider, auditLogRepository, unitOfWork);
+        var handler = new LoginCommandHandler(identityProvider, auditLogRepository, unitOfWork, NullLogger<LoginCommandHandler>.Instance);
         var command = new LoginCommand("doador@email.com", "wrong-password");
 
         // Act
