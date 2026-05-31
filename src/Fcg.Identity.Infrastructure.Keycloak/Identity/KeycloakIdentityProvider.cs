@@ -216,11 +216,13 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
 
     private static CreateKeycloakUserRequest CreateUserRequest(CreateDonorIdentityUserRequest request)
     {
+        var (firstName, lastName) = SplitFullName(request.FullName);
+
         return new CreateKeycloakUserRequest(
             request.Email,
             request.Email,
-            request.FullName,
-            string.Empty,
+            firstName,
+            lastName,
             Enabled: true,
             EmailVerified: true,
             Credentials:
@@ -228,6 +230,17 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 new KeycloakCredential("password", request.Password, Temporary: false)
             ],
             RequiredActions: []);
+    }
+
+    private static (string FirstName, string LastName) SplitFullName(string fullName)
+    {
+        var nameParts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (nameParts.Length == 1)
+        {
+            return (nameParts[0], nameParts[0]);
+        }
+
+        return (nameParts[0], string.Join(' ', nameParts.Skip(1)));
     }
 
     private static string Bearer(string token) => $"Bearer {token}";

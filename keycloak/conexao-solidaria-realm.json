@@ -38,6 +38,7 @@
       "lastName": "ONG",
       "enabled": true,
       "emailVerified": true,
+      "requiredActions": [],
       "credentials": [
         {
           "type": "password",

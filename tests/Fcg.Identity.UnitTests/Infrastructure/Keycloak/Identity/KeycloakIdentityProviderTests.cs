@@ -28,9 +28,36 @@ public sealed class KeycloakIdentityProviderTests
         result.IsSuccess.Should().BeTrue();
         result.Value.KeycloakUserId.Should().Be(keycloakApi.CreatedUserId);
         keycloakApi.CreateUserCalls.Should().Be(1);
+        keycloakApi.LastCreateUserRequest.Should().NotBeNull();
+        keycloakApi.LastCreateUserRequest!.FirstName.Should().Be("Maria");
+        keycloakApi.LastCreateUserRequest.LastName.Should().Be("Silva");
+        keycloakApi.LastCreateUserRequest.EmailVerified.Should().BeTrue();
+        keycloakApi.LastCreateUserRequest.RequiredActions.Should().BeEmpty();
+        keycloakApi.LastCreateUserRequest.Credentials.Should().ContainSingle(credential =>
+            credential.Type == "password" &&
+            credential.Value == request.Password &&
+            !credential.Temporary);
         keycloakApi.FindUsersCalls.Should().Be(1);
         keycloakApi.AssignRealmRolesCalls.Should().Be(1);
         keycloakApi.DeleteUserCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Given_CreateDonorAsync_Called_When_FullNameHasSingleName_Then_ShouldCreateUserWithNonEmptyLastName()
+    {
+        // Arrange
+        var keycloakApi = new FakeKeycloakApi();
+        var provider = CreateProvider(keycloakApi);
+        var request = new CreateDonorIdentityUserRequest("Madonna", "madonna@email.com", "StrongPassword123!");
+
+        // Act
+        var result = await provider.CreateDonorAsync(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        keycloakApi.LastCreateUserRequest.Should().NotBeNull();
+        keycloakApi.LastCreateUserRequest!.FirstName.Should().Be("Madonna");
+        keycloakApi.LastCreateUserRequest.LastName.Should().Be("Madonna");
     }
 
     [Fact]
@@ -194,6 +221,7 @@ public sealed class KeycloakIdentityProviderTests
         public int FindUsersCalls { get; private set; }
         public int AssignRealmRolesCalls { get; private set; }
         public int DeleteUserCalls { get; private set; }
+        public CreateKeycloakUserRequest? LastCreateUserRequest { get; private set; }
 
         public ApiResponse<KeycloakTokenResponse> AdminTokenResponse { get; set; } =
             CreateApiResponse(HttpStatusCode.OK, new KeycloakTokenResponse("admin-token", null, 300, "Bearer"));
@@ -232,6 +260,7 @@ public sealed class KeycloakIdentityProviderTests
             CancellationToken cancellationToken)
         {
             CreateUserCalls++;
+            LastCreateUserRequest = request;
             return Task.FromResult(CreateUserResponse);
         }
 
