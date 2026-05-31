@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Fcg.Identity.Infrastructure.SqlServer.Persistence;
@@ -8,6 +9,7 @@ using Serilog;
 using Serilog.Sinks.OpenTelemetry;
 namespace Fcg.Identity.WebApi.DependencyInjection;
 
+[ExcludeFromCodeCoverage]
 public static class DependencyInjection
 {
     public static IServiceCollection AddWebApi(this IServiceCollection services, IConfiguration configuration)

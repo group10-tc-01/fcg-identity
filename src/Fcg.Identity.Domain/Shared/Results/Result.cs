@@ -36,6 +36,7 @@ public readonly struct Result<TValue>
     public static implicit operator Result<TValue>(TValue value) => Success(value);
     public static implicit operator Result<TValue>(Error error) => Failure(error);
 
-    public TOutput Match<TOutput>(Func<TValue, TOutput> onSuccess, Func<Error, TOutput> onFailure) =>
-        IsSuccess ? onSuccess(_value!) : onFailure(_error!);
+    public TOutput Match<TOutput>(Func<TValue, TOutput> onSuccess, Func<Error, TOutput> onFailure) => IsSuccess
+        ? onSuccess(_value!)
+        : onFailure(_error!);
 }
