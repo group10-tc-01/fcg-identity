@@ -6,6 +6,7 @@ using Fcg.Identity.Application.UseCases.Donors.RegisterDonor;
 using Fcg.Identity.CommomTestsUtilities.Builders.Donors;
 using Fcg.Identity.Domain.Shared.Results;
 using Fcg.Identity.FunctionalTests.Configurations;
+using Fcg.Identity.WebApi.Controllers.v1;
 using Fcg.Identity.WebApi.Models;
 using FluentAssertions;
 using Reqnroll;

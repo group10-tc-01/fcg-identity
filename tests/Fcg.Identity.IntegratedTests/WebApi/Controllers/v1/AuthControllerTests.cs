@@ -10,6 +10,7 @@ using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.Shared.Results;
 using Fcg.Identity.IntegratedTests.Configurations;
 using Fcg.Identity.IntegratedTests.Support;
+using Fcg.Identity.WebApi.Controllers.v1;
 using Fcg.Identity.WebApi.Models;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
