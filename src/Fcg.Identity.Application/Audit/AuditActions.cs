@@ -1,4 +1,4 @@
-namespace Fcg.Identity.Domain.AuditLogs;
+namespace Fcg.Identity.Application.Audit;
 
 public static class AuditActions
 {

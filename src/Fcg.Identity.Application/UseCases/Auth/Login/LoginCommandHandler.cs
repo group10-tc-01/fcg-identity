@@ -1,7 +1,6 @@
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Abstractions.Messaging;
-using Fcg.Identity.Domain.Abstractions;
-using Fcg.Identity.Domain.AuditLogs;
+using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Domain.Shared.Results;
 
 namespace Fcg.Identity.Application.UseCases.Auth.Login;
@@ -9,17 +8,14 @@ namespace Fcg.Identity.Application.UseCases.Auth.Login;
 public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponse>
 {
     private readonly IIdentityProvider _identityProvider;
-    private readonly IAuditLogRepository _auditLogRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMessagePublisher _messagePublisher;
 
     public LoginCommandHandler(
         IIdentityProvider identityProvider,
-        IAuditLogRepository auditLogRepository,
-        IUnitOfWork unitOfWork)
+        IMessagePublisher messagePublisher)
     {
         _identityProvider = identityProvider;
-        _auditLogRepository = auditLogRepository;
-        _unitOfWork = unitOfWork;
+        _messagePublisher = messagePublisher;
     }
 
     public async Task<Result<LoginResponse>> Handle(LoginCommand command, CancellationToken cancellationToken)
@@ -28,11 +24,11 @@ public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginRes
 
         if (loginResult.IsFailure)
         {
-            await AddAuditLogAsync(AuditActions.LoginFailed, command.Email, cancellationToken);
+            AddAuditLog(AuditActions.LoginFailed, command.Email);
             return loginResult.Error;
         }
 
-        await AddAuditLogAsync(AuditActions.LoginSucceeded, command.Email, cancellationToken);
+        AddAuditLog(AuditActions.LoginSucceeded, command.Email);
 
         return new LoginResponse(
             loginResult.Value.AccessToken,
@@ -41,15 +37,13 @@ public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, LoginRes
             loginResult.Value.TokenType);
     }
 
-    private async Task AddAuditLogAsync(string action, string email, CancellationToken cancellationToken)
+    private void AddAuditLog(string action, string email)
     {
-        await _auditLogRepository.AddAsync(
-            AuditLog.Create(
+        _messagePublisher.PublishAuditLogFireAndForget(
+            AuditLogRequestedEvent.Create(
                 action,
                 "Authentication",
                 actorType: "Public",
-                metadataJson: $$"""{"email":"{{email}}"}""").Value,
-            cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                metadata: new Dictionary<string, object?> { ["email"] = email }));
     }
 }

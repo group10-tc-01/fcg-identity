@@ -1,8 +1,7 @@
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Abstractions.Messaging;
+using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Application.UseCases.Auth.Login;
-using Fcg.Identity.Domain.Abstractions;
-using Fcg.Identity.Domain.AuditLogs;
 using Fcg.Identity.Domain.Shared.Results;
 
 namespace Fcg.Identity.Application.UseCases.Auth.RefreshToken;
@@ -10,17 +9,14 @@ namespace Fcg.Identity.Application.UseCases.Auth.RefreshToken;
 public sealed class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, LoginResponse>
 {
     private readonly IIdentityProvider _identityProvider;
-    private readonly IAuditLogRepository _auditLogRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMessagePublisher _messagePublisher;
 
     public RefreshTokenCommandHandler(
         IIdentityProvider identityProvider,
-        IAuditLogRepository auditLogRepository,
-        IUnitOfWork unitOfWork)
+        IMessagePublisher messagePublisher)
     {
         _identityProvider = identityProvider;
-        _auditLogRepository = auditLogRepository;
-        _unitOfWork = unitOfWork;
+        _messagePublisher = messagePublisher;
     }
 
     public async Task<Result<LoginResponse>> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
@@ -34,10 +30,8 @@ public sealed class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCom
             return refreshResult.Error;
         }
 
-        await _auditLogRepository.AddAsync(
-            AuditLog.Create(AuditActions.TokenRefreshed, "Authentication", actorType: "Public").Value,
-            cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _messagePublisher.PublishAuditLogFireAndForget(
+            AuditLogRequestedEvent.Create(AuditActions.TokenRefreshed, "Authentication", actorType: "Public"));
 
         return new LoginResponse(
             refreshResult.Value.AccessToken,

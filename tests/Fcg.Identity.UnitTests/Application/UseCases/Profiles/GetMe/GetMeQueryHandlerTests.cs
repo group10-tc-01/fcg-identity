@@ -2,7 +2,6 @@ using Fcg.Identity.Application.Abstractions.Authentication;
 using Fcg.Identity.Application.UseCases.Profiles.GetMe;
 using Fcg.Identity.CommomTestsUtilities.Builders.DonorProfiles;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
-using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.ManagerProfiles;
 using Fcg.Identity.Domain.Shared;
 using FluentAssertions;
