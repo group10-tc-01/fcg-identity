@@ -6,6 +6,7 @@ using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.ManagerProfiles;
 using Fcg.Identity.Domain.Shared;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Fcg.Identity.UnitTests.Application.UseCases.Profiles.GetMe;
 
@@ -20,7 +21,7 @@ public sealed class GetMeQueryHandlerTests
         await donorRepository.AddAsync(donorProfile);
         var managerRepository = new InMemoryManagerProfileRepository();
         var currentUser = new FakeCurrentUser(donorProfile.KeycloakUserId, [IdentityRoles.Donor]);
-        var handler = new GetMeQueryHandler(currentUser, donorRepository, managerRepository);
+        var handler = new GetMeQueryHandler(currentUser, donorRepository, managerRepository, NullLogger<GetMeQueryHandler>.Instance);
 
         // Act
         var result = await handler.Handle(new GetMeQuery(), CancellationToken.None);
@@ -41,7 +42,7 @@ public sealed class GetMeQueryHandlerTests
         var managerRepository = new InMemoryManagerProfileRepository();
         await managerRepository.AddAsync(managerProfile);
         var currentUser = new FakeCurrentUser(managerProfile.KeycloakUserId, [IdentityRoles.Manager]);
-        var handler = new GetMeQueryHandler(currentUser, donorRepository, managerRepository);
+        var handler = new GetMeQueryHandler(currentUser, donorRepository, managerRepository, NullLogger<GetMeQueryHandler>.Instance);
 
         // Act
         var result = await handler.Handle(new GetMeQuery(), CancellationToken.None);
@@ -60,7 +61,7 @@ public sealed class GetMeQueryHandlerTests
         var donorRepository = new InMemoryDonorProfileRepository();
         var managerRepository = new InMemoryManagerProfileRepository();
         var currentUser = new FakeCurrentUser(Guid.NewGuid().ToString(), [IdentityRoles.Donor]);
-        var handler = new GetMeQueryHandler(currentUser, donorRepository, managerRepository);
+        var handler = new GetMeQueryHandler(currentUser, donorRepository, managerRepository, NullLogger<GetMeQueryHandler>.Instance);
 
         // Act
         var result = await handler.Handle(new GetMeQuery(), CancellationToken.None);

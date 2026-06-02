@@ -6,6 +6,7 @@ using Fcg.Identity.Infrastructure.Keycloak.Http.Contracts;
 using Fcg.Identity.Infrastructure.Keycloak.Identity;
 using Fcg.Identity.Infrastructure.Keycloak.Settings;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Refit;
 
@@ -233,7 +234,8 @@ public sealed class KeycloakIdentityProviderTests
                 AdminClientId = "admin-cli",
                 AdminUsername = "admin",
                 AdminPassword = "admin"
-            }));
+            }),
+            NullLogger<KeycloakIdentityProvider>.Instance);
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T? content)

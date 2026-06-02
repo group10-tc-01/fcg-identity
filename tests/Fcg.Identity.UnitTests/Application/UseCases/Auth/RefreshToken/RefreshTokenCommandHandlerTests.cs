@@ -3,6 +3,7 @@ using Fcg.Identity.Application.UseCases.Auth.RefreshToken;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
 using Fcg.Identity.Domain.Shared.Results;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Fcg.Identity.UnitTests.Application.UseCases.Auth.RefreshToken;
 
@@ -16,7 +17,7 @@ public sealed class RefreshTokenCommandHandlerTests
         identityProvider.ConfigureRefreshTokenResult(new LoginIdentityUserResponse("new-access-token", "new-refresh-token", 300, "Bearer"));
         var auditLogRepository = new InMemoryAuditLogRepository();
         var unitOfWork = new FakeUnitOfWork();
-        var handler = new RefreshTokenCommandHandler(identityProvider, auditLogRepository, unitOfWork);
+        var handler = new RefreshTokenCommandHandler(identityProvider, auditLogRepository, unitOfWork, NullLogger<RefreshTokenCommandHandler>.Instance);
         var command = new RefreshTokenCommand("refresh-token");
 
         // Act
@@ -42,7 +43,7 @@ public sealed class RefreshTokenCommandHandlerTests
         identityProvider.ConfigureRefreshTokenResult(Error.Unauthorized("IdentityProvider.InvalidRefreshToken", "Invalid refresh token."));
         var auditLogRepository = new InMemoryAuditLogRepository();
         var unitOfWork = new FakeUnitOfWork();
-        var handler = new RefreshTokenCommandHandler(identityProvider, auditLogRepository, unitOfWork);
+        var handler = new RefreshTokenCommandHandler(identityProvider, auditLogRepository, unitOfWork, NullLogger<RefreshTokenCommandHandler>.Instance);
         var command = new RefreshTokenCommand("invalid-refresh-token");
 
         // Act
