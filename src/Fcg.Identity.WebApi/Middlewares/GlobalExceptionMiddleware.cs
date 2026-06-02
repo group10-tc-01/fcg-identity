@@ -8,11 +8,14 @@ namespace Fcg.Identity.WebApi.Middlewares;
 [ExcludeFromCodeCoverage]
 public sealed class GlobalExceptionMiddleware
 {
+    private const string CorrelationIdKey = "CorrelationId";
     private readonly RequestDelegate _next;
+    private readonly ILogger<GlobalExceptionMiddleware> _logger;
 
-    public GlobalExceptionMiddleware(RequestDelegate next)
+    public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task Invoke(HttpContext context)
@@ -23,6 +26,14 @@ public sealed class GlobalExceptionMiddleware
         }
         catch (Exception exception)
         {
+            _logger.LogError(
+                exception,
+                "Unhandled exception while processing {Method} {Path}. Returning {StatusCode}. CorrelationId: {CorrelationId}",
+                context.Request.Method,
+                context.Request.Path.Value,
+                StatusCodes.Status500InternalServerError,
+                context.Items[CorrelationIdKey]);
+
             await WriteResponse(context, HttpStatusCode.InternalServerError, exception.Message);
         }
     }

@@ -6,6 +6,7 @@ using Fcg.Identity.CommomTestsUtilities.TestDoubles;
 using Fcg.Identity.Domain.Shared;
 using Fcg.Identity.Domain.Shared.Results;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Fcg.Identity.UnitTests.Application.UseCases.Auth.Login;
 
@@ -35,7 +36,8 @@ public sealed class LoginCommandHandlerTests
             identityProvider,
             messagePublisher,
             donorProfileRepository,
-            new InMemoryManagerProfileRepository());
+            new InMemoryManagerProfileRepository(),
+            NullLogger<LoginCommandHandler>.Instance);
         var command = new LoginCommand("doador@email.com", "Password123!");
 
         // Act
@@ -67,7 +69,8 @@ public sealed class LoginCommandHandlerTests
             identityProvider,
             messagePublisher,
             new InMemoryDonorProfileRepository(),
-            new InMemoryManagerProfileRepository());
+            new InMemoryManagerProfileRepository(),
+            NullLogger<LoginCommandHandler>.Instance);
         var command = new LoginCommand("doador@email.com", "wrong-password");
 
         // Act

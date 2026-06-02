@@ -6,6 +6,7 @@ using Fcg.Identity.CommomTestsUtilities.Builders.Donors;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
 using Fcg.Identity.Domain.Shared.Results;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Fcg.Identity.UnitTests.Application.UseCases.Donors.RegisterDonor;
 
@@ -119,6 +120,11 @@ public sealed class RegisterDonorCommandHandlerTests
         FakeIdentityProvider identityProvider,
         FakeUnitOfWork unitOfWork)
     {
-        return new RegisterDonorCommandHandler(donorProfileRepository, messagePublisher, identityProvider, unitOfWork);
+        return new RegisterDonorCommandHandler(
+            donorProfileRepository,
+            messagePublisher,
+            identityProvider,
+            unitOfWork,
+            NullLogger<RegisterDonorCommandHandler>.Instance);
     }
 }

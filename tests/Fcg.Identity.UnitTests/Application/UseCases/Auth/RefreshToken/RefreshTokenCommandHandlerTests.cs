@@ -6,6 +6,7 @@ using Fcg.Identity.Domain.ManagerProfiles;
 using Fcg.Identity.Domain.Shared;
 using Fcg.Identity.Domain.Shared.Results;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Fcg.Identity.UnitTests.Application.UseCases.Auth.RefreshToken;
 
@@ -32,7 +33,8 @@ public sealed class RefreshTokenCommandHandlerTests
             identityProvider,
             messagePublisher,
             new InMemoryDonorProfileRepository(),
-            managerProfileRepository);
+            managerProfileRepository,
+            NullLogger<RefreshTokenCommandHandler>.Instance);
         var command = new RefreshTokenCommand("refresh-token");
 
         // Act
@@ -64,7 +66,8 @@ public sealed class RefreshTokenCommandHandlerTests
             identityProvider,
             messagePublisher,
             new InMemoryDonorProfileRepository(),
-            new InMemoryManagerProfileRepository());
+            new InMemoryManagerProfileRepository(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
         var command = new RefreshTokenCommand("invalid-refresh-token");
 
         // Act

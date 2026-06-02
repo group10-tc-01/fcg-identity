@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Fcg.Identity.Application.Abstractions.Authentication;
@@ -7,9 +6,7 @@ using Fcg.Identity.Infrastructure.SqlServer.Persistence;
 using Fcg.Identity.WebApi.Authentication;
 using Fcg.Identity.WebApi.Filters;
 using Fcg.Identity.WebApi.Observability;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Fcg.Identity.WebApi.Swagger;
 using Serilog;
 using Serilog.Sinks.OpenTelemetry;
 namespace Fcg.Identity.WebApi.DependencyInjection;
@@ -32,8 +29,6 @@ public static class DependencyInjection
 
         services.AddVersioning();
         services.AddFilters();
-        services.AddAuthenticationConfiguration(configuration);
-        services.AddAuthorization();
         services.AddHealthChecks().AddDbContextCheck<FcgIdentityDbContext>();
         services.AddRouting(options => options.LowercaseUrls = true);
         services.AddObservabilitySettings(configuration);
@@ -42,47 +37,7 @@ public static class DependencyInjection
         return services;
     }
 
-    private static void AddSwaggerConfiguration(this IServiceCollection services, IConfiguration configuration)
-    {
-
-        services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Title = "FCG.Identity - V1",
-                Version = "v1.0"
-            });
-
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Description = @"JWT Authorization header using the Bearer scheme.
-                      Enter 'Bearer' [space] and then your token in the text input below.
-                      Example: 'Bearer 12345abcdef'",
-                Name = "Authorization",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer"
-            });
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
-                            Scheme = "oauth2",
-                            Name = "Bearer",
-                            In = ParameterLocation.Header
-                        },
-                        new List<string>()
-                    }
-            });
-        });
-    }
+    private static void AddSwaggerConfiguration(this IServiceCollection services, IConfiguration configuration) => services.AddIdentitySwagger();
 
     private static void AddVersioning(this IServiceCollection services)
     {
@@ -97,28 +52,6 @@ public static class DependencyInjection
             options.GroupNameFormat = "'v'VVV";
             options.SubstituteApiVersionInUrl = true;
         });
-    }
-
-    private static void AddAuthenticationConfiguration(this IServiceCollection services, IConfiguration configuration)
-    {
-        var keycloakSection = configuration.GetRequiredSection("Keycloak");
-        var authority = $"{keycloakSection.GetValue<string>("BaseUrl")}/realms/{keycloakSection.GetValue<string>("Realm")}";
-        var audience = keycloakSection.GetValue<string>("ClientId");
-
-        services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.Authority = authority;
-                options.Audience = audience;
-                options.RequireHttpsMetadata = false;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateAudience = false,
-                    NameClaimType = "preferred_username",
-                    RoleClaimType = ClaimTypes.Role
-                };
-            });
     }
 
     private static void AddFilters(this IServiceCollection services)
