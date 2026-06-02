@@ -1,5 +1,6 @@
 using Fcg.Identity.Application.Abstractions.Authentication;
 using Fcg.Identity.Application.Abstractions.Messaging;
+using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Domain.DonorProfiles;
 using Fcg.Identity.Domain.ManagerProfiles;
 using Fcg.Identity.Domain.Shared;
@@ -12,15 +13,18 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
     private readonly ICurrentUser _currentUser;
     private readonly IDonorProfileRepository _donorProfileRepository;
     private readonly IManagerProfileRepository _managerProfileRepository;
+    private readonly IMessagePublisher _messagePublisher;
 
     public GetMeQueryHandler(
         ICurrentUser currentUser,
         IDonorProfileRepository donorProfileRepository,
-        IManagerProfileRepository managerProfileRepository)
+        IManagerProfileRepository managerProfileRepository,
+        IMessagePublisher messagePublisher)
     {
         _currentUser = currentUser;
         _donorProfileRepository = donorProfileRepository;
         _managerProfileRepository = managerProfileRepository;
+        _messagePublisher = messagePublisher;
     }
 
     public async Task<Result<GetMeResponse>> Handle(GetMeQuery query, CancellationToken cancellationToken)
@@ -38,6 +42,8 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
                 return Error.NotFound("Profile.NotFound", "Profile was not found.");
             }
 
+            PublishProfileViewedAudit(nameof(DonorProfile), donorProfile.Id, IdentityRoles.Donor);
+
             return new GetMeResponse(
                 donorProfile.Id,
                 donorProfile.KeycloakUserId,
@@ -54,6 +60,8 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
                 return Error.NotFound("Profile.NotFound", "Profile was not found.");
             }
 
+            PublishProfileViewedAudit(nameof(ManagerProfile), managerProfile.Id, IdentityRoles.Manager);
+
             return new GetMeResponse(
                 managerProfile.Id,
                 managerProfile.KeycloakUserId,
@@ -63,5 +71,16 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
         }
 
         return Error.Unauthorized("CurrentUser.RoleNotAllowed", "User role is not allowed.");
+    }
+
+    private void PublishProfileViewedAudit(string entityName, Guid profileId, string actorType)
+    {
+        _messagePublisher.PublishAuditLogFireAndForget(
+            AuditLogRequestedEvent.Create(
+                AuditActions.ProfileViewed,
+                entityName,
+                profileId,
+                actorType,
+                profileId.ToString()));
     }
 }

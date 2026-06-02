@@ -2,6 +2,8 @@ using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Application.UseCases.Auth.RefreshToken;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
+using Fcg.Identity.Domain.ManagerProfiles;
+using Fcg.Identity.Domain.Shared;
 using Fcg.Identity.Domain.Shared.Results;
 using FluentAssertions;
 
@@ -14,9 +16,23 @@ public sealed class RefreshTokenCommandHandlerTests
     {
         // Arrange
         var identityProvider = new FakeIdentityProvider();
-        identityProvider.ConfigureRefreshTokenResult(new LoginIdentityUserResponse("new-access-token", "new-refresh-token", 300, "Bearer"));
+        const string keycloakUserId = "keycloak-manager-id";
+        identityProvider.ConfigureRefreshTokenResult(new LoginIdentityUserResponse(
+            "new-access-token",
+            "new-refresh-token",
+            300,
+            "Bearer",
+            keycloakUserId,
+            [IdentityRoles.Manager]));
         var messagePublisher = new FakeMessagePublisher();
-        var handler = new RefreshTokenCommandHandler(identityProvider, messagePublisher);
+        var managerProfileRepository = new InMemoryManagerProfileRepository();
+        var managerProfile = ManagerProfile.Create(keycloakUserId, "Gestor ONG", "gestor@email.com").Value;
+        await managerProfileRepository.AddAsync(managerProfile);
+        var handler = new RefreshTokenCommandHandler(
+            identityProvider,
+            messagePublisher,
+            new InMemoryDonorProfileRepository(),
+            managerProfileRepository);
         var command = new RefreshTokenCommand("refresh-token");
 
         // Act
@@ -33,7 +49,8 @@ public sealed class RefreshTokenCommandHandlerTests
         var auditMessage = await messagePublisher.WaitForSingleMessageAsync<AuditLogRequestedEvent>();
         auditMessage.Action.Should().Be(AuditActions.TokenRefreshed);
         auditMessage.EntityName.Should().Be("Authentication");
-        auditMessage.ActorType.Should().Be("Public");
+        auditMessage.ActorId.Should().Be(managerProfile.Id);
+        auditMessage.ActorType.Should().Be(IdentityRoles.Manager);
     }
 
     [Fact]
@@ -43,7 +60,11 @@ public sealed class RefreshTokenCommandHandlerTests
         var identityProvider = new FakeIdentityProvider();
         identityProvider.ConfigureRefreshTokenResult(Error.Unauthorized("IdentityProvider.InvalidRefreshToken", "Invalid refresh token."));
         var messagePublisher = new FakeMessagePublisher();
-        var handler = new RefreshTokenCommandHandler(identityProvider, messagePublisher);
+        var handler = new RefreshTokenCommandHandler(
+            identityProvider,
+            messagePublisher,
+            new InMemoryDonorProfileRepository(),
+            new InMemoryManagerProfileRepository());
         var command = new RefreshTokenCommand("invalid-refresh-token");
 
         // Act

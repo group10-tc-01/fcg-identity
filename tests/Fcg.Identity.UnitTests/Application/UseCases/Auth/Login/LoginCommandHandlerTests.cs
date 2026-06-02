@@ -1,7 +1,9 @@
 using Fcg.Identity.Application.Abstractions.Identity;
 using Fcg.Identity.Application.Audit;
 using Fcg.Identity.Application.UseCases.Auth.Login;
+using Fcg.Identity.CommomTestsUtilities.Builders.DonorProfiles;
 using Fcg.Identity.CommomTestsUtilities.TestDoubles;
+using Fcg.Identity.Domain.Shared;
 using Fcg.Identity.Domain.Shared.Results;
 using FluentAssertions;
 
@@ -14,9 +16,26 @@ public sealed class LoginCommandHandlerTests
     {
         // Arrange
         var identityProvider = new FakeIdentityProvider();
-        identityProvider.ConfigureLoginResult(new LoginIdentityUserResponse("access-token", "refresh-token", 300, "Bearer"));
+        const string keycloakUserId = "keycloak-donor-id";
+        identityProvider.ConfigureLoginResult(new LoginIdentityUserResponse(
+            "access-token",
+            "refresh-token",
+            300,
+            "Bearer",
+            keycloakUserId,
+            [IdentityRoles.Donor]));
         var messagePublisher = new FakeMessagePublisher();
-        var handler = new LoginCommandHandler(identityProvider, messagePublisher);
+        var donorProfileRepository = new InMemoryDonorProfileRepository();
+        var donorProfile = new DonorProfileBuilder()
+            .WithKeycloakUserId(keycloakUserId)
+            .WithEmail("doador@email.com")
+            .Build();
+        await donorProfileRepository.AddAsync(donorProfile);
+        var handler = new LoginCommandHandler(
+            identityProvider,
+            messagePublisher,
+            donorProfileRepository,
+            new InMemoryManagerProfileRepository());
         var command = new LoginCommand("doador@email.com", "Password123!");
 
         // Act
@@ -33,7 +52,8 @@ public sealed class LoginCommandHandlerTests
         var auditMessage = await messagePublisher.WaitForSingleMessageAsync<AuditLogRequestedEvent>();
         auditMessage.Action.Should().Be(AuditActions.LoginSucceeded);
         auditMessage.EntityName.Should().Be("Authentication");
-        auditMessage.ActorType.Should().Be("Public");
+        auditMessage.ActorId.Should().Be(donorProfile.Id);
+        auditMessage.ActorType.Should().Be(IdentityRoles.Donor);
     }
 
     [Fact]
@@ -43,7 +63,11 @@ public sealed class LoginCommandHandlerTests
         var identityProvider = new FakeIdentityProvider();
         identityProvider.ConfigureLoginResult(Error.Unauthorized("IdentityProvider.InvalidCredentials", "Invalid email or password."));
         var messagePublisher = new FakeMessagePublisher();
-        var handler = new LoginCommandHandler(identityProvider, messagePublisher);
+        var handler = new LoginCommandHandler(
+            identityProvider,
+            messagePublisher,
+            new InMemoryDonorProfileRepository(),
+            new InMemoryManagerProfileRepository());
         var command = new LoginCommand("doador@email.com", "wrong-password");
 
         // Act
