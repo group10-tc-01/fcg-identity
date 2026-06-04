@@ -1,5 +1,4 @@
 using Fcg.Identity.Application.Seed;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Fcg.Identity.WebApi.Seed;
 

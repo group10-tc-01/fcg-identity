@@ -37,7 +37,7 @@ public sealed class AuthController(IMediator mediator) : BaseApiController(media
         return result.Match<IActionResult>(
             response =>
             {
-                AuthCookieWriter.AppendAuthCookies(Response, response);
+                AuthCookieWriter.AppendAuthCookies(Request, Response, response);
                 return Ok(ApiResponse<AuthSessionResponse>.FromSuccess(ToSessionResponse(response)));
             },
             error => error.ToActionResult());
@@ -58,7 +58,7 @@ public sealed class AuthController(IMediator mediator) : BaseApiController(media
         return result.Match<IActionResult>(
             response =>
             {
-                AuthCookieWriter.AppendAuthCookies(Response, response);
+                AuthCookieWriter.AppendAuthCookies(Request, Response, response);
                 return Ok(ApiResponse<AuthSessionResponse>.FromSuccess(ToSessionResponse(response)));
             },
             error => error.ToActionResult());
@@ -68,7 +68,7 @@ public sealed class AuthController(IMediator mediator) : BaseApiController(media
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public IActionResult Logout()
     {
-        AuthCookieWriter.DeleteAuthCookies(Response);
+        AuthCookieWriter.DeleteAuthCookies(Request, Response);
 
         return NoContent();
     }

@@ -4,39 +4,39 @@ namespace Fcg.Identity.WebApi.Authentication;
 
 public static class AuthCookieWriter
 {
-    public static void AppendAuthCookies(HttpResponse response, LoginResponse loginResponse)
+    public static void AppendAuthCookies(HttpRequest request, HttpResponse response, LoginResponse loginResponse)
     {
         response.Cookies.Append(
             AuthCookieNames.AccessToken,
             loginResponse.AccessToken,
-            CreateCookieOptions(TimeSpan.FromSeconds(loginResponse.ExpiresIn)));
+            CreateCookieOptions(request, TimeSpan.FromSeconds(loginResponse.ExpiresIn)));
 
         response.Cookies.Append(
             AuthCookieNames.RefreshToken,
             loginResponse.RefreshToken,
-            CreateCookieOptions(TimeSpan.FromDays(7)));
+            CreateCookieOptions(request, TimeSpan.FromDays(7)));
     }
 
-    public static void DeleteAuthCookies(HttpResponse response)
+    public static void DeleteAuthCookies(HttpRequest request, HttpResponse response)
     {
-        response.Cookies.Delete(AuthCookieNames.AccessToken, CreateDeleteCookieOptions());
-        response.Cookies.Delete(AuthCookieNames.RefreshToken, CreateDeleteCookieOptions());
+        response.Cookies.Delete(AuthCookieNames.AccessToken, CreateDeleteCookieOptions(request));
+        response.Cookies.Delete(AuthCookieNames.RefreshToken, CreateDeleteCookieOptions(request));
     }
 
-    private static CookieOptions CreateCookieOptions(TimeSpan maxAge) => new()
+    private static CookieOptions CreateCookieOptions(HttpRequest request, TimeSpan maxAge) => new()
     {
         HttpOnly = true,
-        Secure = true,
-        SameSite = SameSiteMode.None,
+        Secure = request.IsHttps,
+        SameSite = request.IsHttps ? SameSiteMode.None : SameSiteMode.Lax,
         MaxAge = maxAge,
         Path = "/"
     };
 
-    private static CookieOptions CreateDeleteCookieOptions() => new()
+    private static CookieOptions CreateDeleteCookieOptions(HttpRequest request) => new()
     {
         HttpOnly = true,
-        Secure = true,
-        SameSite = SameSiteMode.None,
+        Secure = request.IsHttps,
+        SameSite = request.IsHttps ? SameSiteMode.None : SameSiteMode.Lax,
         Path = "/"
     };
 }

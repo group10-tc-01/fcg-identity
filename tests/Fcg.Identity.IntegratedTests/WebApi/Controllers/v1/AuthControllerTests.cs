@@ -160,7 +160,9 @@ public sealed class AuthControllerTests : IAsyncLifetime
         payload.Data.RefreshToken.Should().Be("refresh-token");
         payload.Data.TokenType.Should().Be("Bearer");
         response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
-        cookies.Should().Contain(cookie => cookie.Contains("fcg_access_token=access-token"));
+        var accessTokenCookie = cookies.Should().ContainSingle(cookie => cookie.Contains("fcg_access_token=access-token")).Subject;
+        accessTokenCookie.Should().Contain("samesite=lax");
+        accessTokenCookie.Should().NotContain("secure");
         _factory.IdentityProvider.LoginCalls.Should().Be(1);
     }
 
@@ -220,7 +222,9 @@ public sealed class AuthControllerTests : IAsyncLifetime
         payload.Data.RefreshToken.Should().Be("new-refresh-token");
         payload.Data.TokenType.Should().Be("Bearer");
         response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
-        cookies.Should().Contain(cookie => cookie.Contains("fcg_access_token=new-access-token"));
+        var accessTokenCookie = cookies.Should().ContainSingle(cookie => cookie.Contains("fcg_access_token=new-access-token")).Subject;
+        accessTokenCookie.Should().Contain("samesite=lax");
+        accessTokenCookie.Should().NotContain("secure");
         _factory.IdentityProvider.RefreshTokenCalls.Should().Be(1);
     }
 
