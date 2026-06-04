@@ -32,6 +32,19 @@ public sealed class ManagerProfileRepository : IManagerProfileRepository
             .FirstOrDefaultAsync(managerProfile => managerProfile.KeycloakUserId == keycloakUserId, cancellationToken);
     }
 
+    public async Task<ManagerProfile?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var emailResult = Email.Create(email);
+        if (emailResult.IsFailure)
+        {
+            return null;
+        }
+
+        return await _dbContext.ManagerProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(managerProfile => managerProfile.Email == emailResult.Value, cancellationToken);
+    }
+
     public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         var emailResult = Email.Create(email);
@@ -41,5 +54,10 @@ public sealed class ManagerProfileRepository : IManagerProfileRepository
         }
 
         return _dbContext.ManagerProfiles.AnyAsync(managerProfile => managerProfile.Email == emailResult.Value, cancellationToken);
+    }
+
+    public void Update(ManagerProfile managerProfile)
+    {
+        _dbContext.ManagerProfiles.Update(managerProfile);
     }
 }

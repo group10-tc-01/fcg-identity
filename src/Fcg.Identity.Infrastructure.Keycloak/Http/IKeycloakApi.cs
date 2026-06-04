@@ -33,6 +33,14 @@ public interface IKeycloakApi
         [Header("Authorization")] string authorization,
         CancellationToken cancellationToken);
 
+    [Put("/admin/realms/{realm}/users/{userId}/reset-password")]
+    Task<IApiResponse> ResetPasswordAsync(
+        string realm,
+        string userId,
+        [Header("Authorization")] string authorization,
+        [Body] KeycloakCredential credential,
+        CancellationToken cancellationToken);
+
     [Get("/admin/realms/{realm}/roles/{roleName}")]
     Task<ApiResponse<KeycloakRoleResponse>> GetRealmRoleAsync(
         string realm,

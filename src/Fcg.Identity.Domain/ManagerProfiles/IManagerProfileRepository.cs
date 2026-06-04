@@ -8,5 +8,9 @@ public interface IManagerProfileRepository
 
     Task<ManagerProfile?> GetByKeycloakUserIdAsync(string keycloakUserId, CancellationToken cancellationToken = default);
 
+    Task<ManagerProfile?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+
     Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    void Update(ManagerProfile managerProfile);
 }

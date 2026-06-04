@@ -40,7 +40,12 @@ public static class PipelineDependencyInjection
         });
         app.MapPrometheusScrapingEndpoint("/metrics");
 
-        app.UseHttpsRedirection();
+        if (!app.Environment.IsDevelopment() && app.Environment.EnvironmentName != "Docker")
+        {
+            app.UseHttpsRedirection();
+        }
+
+        app.UseCors();
 
         app.UseAuthentication();
         app.UseAuthorization();

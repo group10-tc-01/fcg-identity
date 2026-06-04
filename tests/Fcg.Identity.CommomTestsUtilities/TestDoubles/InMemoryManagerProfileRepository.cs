@@ -29,8 +29,22 @@ public sealed class InMemoryManagerProfileRepository : IManagerProfileRepository
         return Task.FromResult(_managerProfiles.FirstOrDefault(managerProfile => managerProfile.KeycloakUserId == keycloakUserId));
     }
 
+    public Task<ManagerProfile?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_managerProfiles.FirstOrDefault(managerProfile => managerProfile.Email.Value == email));
+    }
+
     public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_managerProfiles.Any(managerProfile => managerProfile.Email.Value == email));
+    }
+
+    public void Update(ManagerProfile managerProfile)
+    {
+        var index = _managerProfiles.FindIndex(existing => existing.Id == managerProfile.Id);
+        if (index >= 0)
+        {
+            _managerProfiles[index] = managerProfile;
+        }
     }
 }

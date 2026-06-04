@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Security.Claims;
 
 namespace Fcg.Identity.WebApi.Middlewares;
 
