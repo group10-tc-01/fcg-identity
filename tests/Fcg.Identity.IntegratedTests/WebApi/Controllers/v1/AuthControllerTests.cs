@@ -149,7 +149,7 @@ public sealed class AuthControllerTests : IAsyncLifetime
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/v1/auth/login", command);
-        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<AuthSessionResponse>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -157,6 +157,10 @@ public sealed class AuthControllerTests : IAsyncLifetime
         payload!.Success.Should().BeTrue();
         payload.Data.Should().NotBeNull();
         payload.Data!.AccessToken.Should().Be("access-token");
+        payload.Data.RefreshToken.Should().Be("refresh-token");
+        payload.Data.TokenType.Should().Be("Bearer");
+        response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
+        cookies.Should().Contain(cookie => cookie.Contains("fcg_access_token=access-token"));
         _factory.IdentityProvider.LoginCalls.Should().Be(1);
     }
 
@@ -205,7 +209,7 @@ public sealed class AuthControllerTests : IAsyncLifetime
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", command);
-        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<AuthSessionResponse>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -213,6 +217,10 @@ public sealed class AuthControllerTests : IAsyncLifetime
         payload!.Success.Should().BeTrue();
         payload.Data.Should().NotBeNull();
         payload.Data!.AccessToken.Should().Be("new-access-token");
+        payload.Data.RefreshToken.Should().Be("new-refresh-token");
+        payload.Data.TokenType.Should().Be("Bearer");
+        response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
+        cookies.Should().Contain(cookie => cookie.Contains("fcg_access_token=new-access-token"));
         _factory.IdentityProvider.RefreshTokenCalls.Should().Be(1);
     }
 

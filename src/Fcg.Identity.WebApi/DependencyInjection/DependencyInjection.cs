@@ -2,10 +2,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Fcg.Identity.Application.Abstractions.Authentication;
+using Fcg.Identity.Application.Seed;
 using Fcg.Identity.Infrastructure.SqlServer.Persistence;
 using Fcg.Identity.WebApi.Authentication;
 using Fcg.Identity.WebApi.Filters;
 using Fcg.Identity.WebApi.Observability;
+using Fcg.Identity.WebApi.Seed;
+using Fcg.Identity.WebApi.Settings;
 using Fcg.Identity.WebApi.Swagger;
 using Serilog;
 using Serilog.Sinks.OpenTelemetry;
@@ -26,6 +29,8 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
         services.AddSwaggerConfiguration(configuration);
+        services.AddCorsConfiguration(configuration);
+        services.AddManagerSeed(configuration);
 
         services.AddVersioning();
         services.AddFilters();
@@ -38,6 +43,37 @@ public static class DependencyInjection
     }
 
     private static void AddSwaggerConfiguration(this IServiceCollection services, IConfiguration configuration) => services.AddIdentitySwagger();
+
+    private static void AddManagerSeed(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddOptions<ManagerSeedSettings>()
+            .Bind(configuration.GetRequiredSection(ManagerSeedSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddHostedService<ManagerSeedHostedService>();
+    }
+
+    private static void AddCorsConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        var settings = configuration
+            .GetSection(CorsSettings.SectionName)
+            .Get<CorsSettings>()
+            ?? new CorsSettings { AllowedOrigins = ["http://localhost:4200"] };
+
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy
+                    .WithOrigins(settings.AllowedOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+    }
 
     private static void AddVersioning(this IServiceCollection services)
     {

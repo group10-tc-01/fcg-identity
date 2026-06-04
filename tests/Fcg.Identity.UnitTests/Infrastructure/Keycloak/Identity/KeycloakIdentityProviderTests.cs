@@ -141,6 +141,147 @@ public sealed class KeycloakIdentityProviderTests
     }
 
     [Fact]
+    public async Task Given_EnsureManagerAsync_Called_When_KeycloakUserDoesNotExist_Then_ShouldCreateUserAssignManagerRoleAndReturnUserId()
+    {
+        // Arrange
+        var keycloakApi = new FakeKeycloakApi
+        {
+            FindUsersResponse = CreateApiResponse<List<KeycloakUserResponse>>(HttpStatusCode.OK, [])
+        };
+        keycloakApi.FindUsersResponse = CreateApiResponse(HttpStatusCode.OK, new List<KeycloakUserResponse> { new(keycloakApi.CreatedUserId) });
+        keycloakApi.QueueFindUsersResponse(CreateApiResponse<List<KeycloakUserResponse>>(HttpStatusCode.OK, []));
+        keycloakApi.GetRealmRoleResponse = CreateApiResponse(HttpStatusCode.OK, new KeycloakRoleResponse("manager-role-id", IdentityRoles.Manager));
+        var provider = CreateProvider(keycloakApi);
+        var request = new EnsureManagerIdentityUserRequest("Gestor ONG", "gestor@email.com", "StrongPassword123!");
+
+        // Act
+        var result = await provider.EnsureManagerAsync(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.KeycloakUserId.Should().Be(keycloakApi.CreatedUserId);
+        keycloakApi.CreateUserCalls.Should().Be(1);
+        keycloakApi.FindUsersCalls.Should().Be(2);
+        keycloakApi.ResetPasswordCalls.Should().Be(1);
+        keycloakApi.LastResetPasswordCredential.Should().BeEquivalentTo(new KeycloakCredential("password", request.Password, Temporary: false));
+        keycloakApi.LastCreateUserRequest.Should().NotBeNull();
+        keycloakApi.LastCreateUserRequest!.Email.Should().Be(request.Email);
+        keycloakApi.LastRealmRoleName.Should().Be(IdentityRoles.Manager);
+        keycloakApi.AssignRealmRolesCalls.Should().Be(1);
+        keycloakApi.DeleteUserCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Given_EnsureManagerAsync_Called_When_KeycloakUserExists_Then_ShouldReuseUserResetPasswordAndAssignManagerRole()
+    {
+        // Arrange
+        var existingUserId = Guid.NewGuid().ToString();
+        var keycloakApi = new FakeKeycloakApi
+        {
+            FindUsersResponse = CreateApiResponse(HttpStatusCode.OK, new List<KeycloakUserResponse> { new(existingUserId) }),
+            GetRealmRoleResponse = CreateApiResponse(HttpStatusCode.OK, new KeycloakRoleResponse("manager-role-id", IdentityRoles.Manager))
+        };
+        var provider = CreateProvider(keycloakApi);
+        var request = new EnsureManagerIdentityUserRequest("Gestor ONG", "gestor@email.com", "StrongPassword123!");
+
+        // Act
+        var result = await provider.EnsureManagerAsync(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.KeycloakUserId.Should().Be(existingUserId);
+        keycloakApi.CreateUserCalls.Should().Be(0);
+        keycloakApi.FindUsersCalls.Should().Be(1);
+        keycloakApi.ResetPasswordCalls.Should().Be(1);
+        keycloakApi.LastResetPasswordCredential.Should().BeEquivalentTo(new KeycloakCredential("password", request.Password, Temporary: false));
+        keycloakApi.LastRealmRoleName.Should().Be(IdentityRoles.Manager);
+        keycloakApi.AssignRealmRolesCalls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Given_EnsureManagerAsync_Called_When_AdminTokenFails_Then_ShouldReturnFailure()
+    {
+        // Arrange
+        var keycloakApi = new FakeKeycloakApi
+        {
+            AdminTokenResponse = CreateApiResponse<KeycloakTokenResponse>(HttpStatusCode.Unauthorized, null)
+        };
+        var provider = CreateProvider(keycloakApi);
+
+        // Act
+        var result = await provider.EnsureManagerAsync(CreateManagerRequest(), CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("IdentityProvider.AdminAuthenticationFailed");
+        keycloakApi.CreateUserCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Given_EnsureManagerAsync_Called_When_CreatedUserLookupFails_Then_ShouldReturnFailure()
+    {
+        // Arrange
+        var keycloakApi = new FakeKeycloakApi
+        {
+            FindUsersResponse = CreateApiResponse<List<KeycloakUserResponse>>(HttpStatusCode.OK, [])
+        };
+        keycloakApi.QueueFindUsersResponse(CreateApiResponse<List<KeycloakUserResponse>>(HttpStatusCode.OK, []));
+        var provider = CreateProvider(keycloakApi);
+
+        // Act
+        var result = await provider.EnsureManagerAsync(CreateManagerRequest(), CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("IdentityProvider.UserLookupFailed");
+        keycloakApi.AssignRealmRolesCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Given_EnsureManagerAsync_Called_When_RoleAssignmentFailsForCreatedUser_Then_ShouldDeleteCreatedUserAndReturnFailure()
+    {
+        // Arrange
+        var keycloakApi = new FakeKeycloakApi
+        {
+            FindUsersResponse = CreateApiResponse<List<KeycloakUserResponse>>(HttpStatusCode.OK, []),
+            AssignRealmRolesResponse = CreateApiResponse(HttpStatusCode.BadRequest)
+        };
+        keycloakApi.FindUsersResponse = CreateApiResponse(HttpStatusCode.OK, new List<KeycloakUserResponse> { new(keycloakApi.CreatedUserId) });
+        keycloakApi.QueueFindUsersResponse(CreateApiResponse<List<KeycloakUserResponse>>(HttpStatusCode.OK, []));
+        var provider = CreateProvider(keycloakApi);
+
+        // Act
+        var result = await provider.EnsureManagerAsync(CreateManagerRequest(), CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("IdentityProvider.AssignRoleFailed");
+        keycloakApi.DeleteUserCalls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Given_EnsureManagerAsync_Called_When_PasswordResetFailsForExistingUser_Then_ShouldReturnFailure()
+    {
+        // Arrange
+        var existingUserId = Guid.NewGuid().ToString();
+        var keycloakApi = new FakeKeycloakApi
+        {
+            FindUsersResponse = CreateApiResponse(HttpStatusCode.OK, new List<KeycloakUserResponse> { new(existingUserId) }),
+            ResetPasswordResponse = CreateApiResponse(HttpStatusCode.BadRequest)
+        };
+        var provider = CreateProvider(keycloakApi);
+
+        // Act
+        var result = await provider.EnsureManagerAsync(CreateManagerRequest(), CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("IdentityProvider.ResetPasswordFailed");
+        keycloakApi.AssignRealmRolesCalls.Should().Be(0);
+        keycloakApi.DeleteUserCalls.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Given_LoginAsync_Called_When_KeycloakReturnsToken_Then_ShouldReturnToken()
     {
         // Arrange
@@ -228,6 +369,11 @@ public sealed class KeycloakIdentityProviderTests
         return new CreateDonorIdentityUserRequest("Maria Silva", "maria@email.com", "StrongPassword123!");
     }
 
+    private static EnsureManagerIdentityUserRequest CreateManagerRequest()
+    {
+        return new EnsureManagerIdentityUserRequest("Gestor ONG", "gestor@email.com", "StrongPassword123!");
+    }
+
     private static KeycloakIdentityProvider CreateProvider(IKeycloakApi keycloakApi)
     {
         return new KeycloakIdentityProvider(
@@ -291,10 +437,16 @@ public sealed class KeycloakIdentityProviderTests
         public string CreatedUserId { get; } = Guid.NewGuid().ToString();
         public int CreateUserCalls { get; private set; }
         public int FindUsersCalls { get; private set; }
+        public int GetRealmRoleCalls { get; private set; }
         public int AssignRealmRolesCalls { get; private set; }
         public int DeleteUserCalls { get; private set; }
+        public int ResetPasswordCalls { get; private set; }
         public CreateKeycloakUserRequest? LastCreateUserRequest { get; private set; }
+        public KeycloakCredential? LastResetPasswordCredential { get; private set; }
         public Dictionary<string, string>? LastTokenForm { get; private set; }
+        public string? LastRealmRoleName { get; private set; }
+        public IReadOnlyCollection<KeycloakRoleResponse>? LastAssignedRoles { get; private set; }
+        private readonly Queue<ApiResponse<List<KeycloakUserResponse>>> _queuedFindUsersResponses = [];
 
         public ApiResponse<KeycloakTokenResponse> AdminTokenResponse { get; set; } =
             CreateApiResponse(HttpStatusCode.OK, new KeycloakTokenResponse("admin-token", null, 300, "Bearer"));
@@ -313,9 +465,16 @@ public sealed class KeycloakIdentityProviderTests
 
         public IApiResponse DeleteUserResponse { get; set; } = CreateApiResponse(HttpStatusCode.NoContent);
 
+        public IApiResponse ResetPasswordResponse { get; set; } = CreateApiResponse(HttpStatusCode.NoContent);
+
         public FakeKeycloakApi()
         {
             FindUsersResponse = CreateApiResponse(HttpStatusCode.OK, new List<KeycloakUserResponse> { new(CreatedUserId) });
+        }
+
+        public void QueueFindUsersResponse(ApiResponse<List<KeycloakUserResponse>> response)
+        {
+            _queuedFindUsersResponses.Enqueue(response);
         }
 
         public Task<ApiResponse<KeycloakTokenResponse>> GetTokenAsync(
@@ -347,7 +506,7 @@ public sealed class KeycloakIdentityProviderTests
             CancellationToken cancellationToken)
         {
             FindUsersCalls++;
-            return Task.FromResult(FindUsersResponse);
+            return Task.FromResult(_queuedFindUsersResponses.TryDequeue(out var response) ? response : FindUsersResponse);
         }
 
         public Task<IApiResponse> DeleteUserAsync(
@@ -360,12 +519,26 @@ public sealed class KeycloakIdentityProviderTests
             return Task.FromResult(DeleteUserResponse);
         }
 
+        public Task<IApiResponse> ResetPasswordAsync(
+            string realm,
+            string userId,
+            string authorization,
+            KeycloakCredential credential,
+            CancellationToken cancellationToken)
+        {
+            ResetPasswordCalls++;
+            LastResetPasswordCredential = credential;
+            return Task.FromResult(ResetPasswordResponse);
+        }
+
         public Task<ApiResponse<KeycloakRoleResponse>> GetRealmRoleAsync(
             string realm,
             string roleName,
             string authorization,
             CancellationToken cancellationToken)
         {
+            GetRealmRoleCalls++;
+            LastRealmRoleName = roleName;
             return Task.FromResult(GetRealmRoleResponse);
         }
 
@@ -377,6 +550,7 @@ public sealed class KeycloakIdentityProviderTests
             CancellationToken cancellationToken)
         {
             AssignRealmRolesCalls++;
+            LastAssignedRoles = roles;
             return Task.FromResult(AssignRealmRolesResponse);
         }
     }

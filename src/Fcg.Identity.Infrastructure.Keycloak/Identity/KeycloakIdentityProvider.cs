@@ -47,10 +47,11 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
             var authorization = Bearer(accessTokenResult.Value);
             _logger.LogInformation("Creating Keycloak user. Email: {Email}. Realm: {Realm}", request.Email, _keycloakSettings.Realm);
 
-            var createUserResponse = await _keycloakApi.CreateUserAsync(
-                _keycloakSettings.Realm,
+            var createUserResponse = await CreateKeycloakUserAsync(
+                request.FullName,
+                request.Email,
+                request.Password,
                 authorization,
-                CreateUserRequest(request),
                 cancellationToken);
 
             if (createUserResponse.StatusCode == HttpStatusCode.Conflict)
@@ -119,6 +120,138 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         catch (TaskCanceledException exception)
         {
             _logger.LogError(exception, "Keycloak donor creation timed out. Email: {Email}", request.Email);
+            return Error.Failure("IdentityProvider.Timeout", "The identity provider request timed out.");
+        }
+    }
+
+    public async Task<Result<EnsureManagerIdentityUserResponse>> EnsureManagerAsync(
+        EnsureManagerIdentityUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Keycloak manager seed started. Email: {Email}. Realm: {Realm}", request.Email, _keycloakSettings.Realm);
+
+            var accessTokenResult = await GetAdminAccessTokenAsync(cancellationToken);
+            if (accessTokenResult.IsFailure)
+            {
+                _logger.LogWarning(
+                    "Keycloak manager seed stopped because admin authentication failed. ErrorCode: {ErrorCode}",
+                    accessTokenResult.Error.Code);
+
+                return accessTokenResult.Error;
+            }
+
+            var authorization = Bearer(accessTokenResult.Value);
+            var existingUserIdResult = await FindOptionalUserIdByEmailAsync(request.Email, authorization, cancellationToken);
+            if (existingUserIdResult.IsFailure)
+            {
+                return existingUserIdResult.Error;
+            }
+
+            var createdUser = false;
+            var keycloakUserId = existingUserIdResult.Value;
+
+            if (string.IsNullOrWhiteSpace(keycloakUserId))
+            {
+                _logger.LogInformation("Creating Keycloak manager user. Email: {Email}. Realm: {Realm}", request.Email, _keycloakSettings.Realm);
+
+                var createUserResponse = await CreateKeycloakUserAsync(
+                    request.FullName,
+                    request.Email,
+                    request.Password,
+                    authorization,
+                    cancellationToken);
+
+                if (createUserResponse.StatusCode == HttpStatusCode.Conflict)
+                {
+                    _logger.LogWarning("Keycloak manager creation returned conflict. Email: {Email}", request.Email);
+                    return Error.Conflict("IdentityProvider.UserAlreadyExists", "A user with this email already exists in the identity provider.");
+                }
+
+                if (!createUserResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "Keycloak manager creation failed. Email: {Email}. StatusCode: {StatusCode}",
+                        request.Email,
+                        createUserResponse.StatusCode);
+
+                    return Error.Failure("IdentityProvider.CreateUserFailed", "Could not create manager user in the identity provider.");
+                }
+
+                createdUser = true;
+
+                var createdUserIdResult = await FindUserIdByEmailAsync(request.Email, authorization, cancellationToken);
+                if (createdUserIdResult.IsFailure)
+                {
+                    _logger.LogWarning(
+                        "Keycloak manager lookup failed after creation. Email: {Email}. ErrorCode: {ErrorCode}",
+                        request.Email,
+                        createdUserIdResult.Error.Code);
+
+                    return createdUserIdResult.Error;
+                }
+
+                keycloakUserId = createdUserIdResult.Value;
+            }
+
+            var resetPasswordError = await ResetPasswordAsync(
+                keycloakUserId,
+                request.Password,
+                authorization,
+                cancellationToken);
+
+            if (resetPasswordError is not null)
+            {
+                if (createdUser)
+                {
+                    _logger.LogWarning(
+                        "Keycloak manager password reset failed. Starting compensating delete. KeycloakUserId: {KeycloakUserId}. ErrorCode: {ErrorCode}",
+                        keycloakUserId,
+                        resetPasswordError.Code);
+
+                    await DeleteUserAsync(keycloakUserId, authorization, cancellationToken);
+                }
+
+                return resetPasswordError;
+            }
+
+            var assignRoleResult = await AssignRealmRoleAsync(keycloakUserId, IdentityRoles.Manager, authorization, cancellationToken);
+            if (assignRoleResult.IsFailure)
+            {
+                if (createdUser)
+                {
+                    _logger.LogWarning(
+                        "Keycloak manager role assignment failed. Starting compensating delete. KeycloakUserId: {KeycloakUserId}. ErrorCode: {ErrorCode}",
+                        keycloakUserId,
+                        assignRoleResult.Error.Code);
+
+                    await DeleteUserAsync(keycloakUserId, authorization, cancellationToken);
+                }
+
+                return assignRoleResult.Error;
+            }
+
+            _logger.LogInformation(
+                "Keycloak manager seed completed. Email: {Email}. KeycloakUserId: {KeycloakUserId}",
+                request.Email,
+                keycloakUserId);
+
+            return new EnsureManagerIdentityUserResponse(keycloakUserId);
+        }
+        catch (ApiException exception)
+        {
+            _logger.LogError(exception, "Keycloak manager seed failed because provider API is unavailable. Email: {Email}", request.Email);
+            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Keycloak manager seed failed because provider HTTP request failed. Email: {Email}", request.Email);
+            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+        }
+        catch (TaskCanceledException exception)
+        {
+            _logger.LogError(exception, "Keycloak manager seed timed out. Email: {Email}", request.Email);
             return Error.Failure("IdentityProvider.Timeout", "The identity provider request timed out.");
         }
     }
@@ -282,14 +415,52 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         }
 
         var users = response.Content ?? [];
-        var user = users.SingleOrDefault();
-        if (user is null || string.IsNullOrWhiteSpace(user.Id))
+        if (users.Count != 1 || string.IsNullOrWhiteSpace(users[0].Id))
         {
             _logger.LogWarning("Keycloak user lookup returned no single user. Email: {Email}. Count: {UserCount}", email, users.Count);
             return Error.Failure("IdentityProvider.UserLookupFailed", "Could not find the created user in the identity provider.");
         }
 
+        var user = users[0];
         _logger.LogInformation("Keycloak user lookup completed. Email: {Email}. KeycloakUserId: {KeycloakUserId}", email, user.Id);
+
+        return user.Id;
+    }
+
+    private async Task<Result<string?>> FindOptionalUserIdByEmailAsync(
+        string email,
+        string authorization,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Finding optional Keycloak user by email {Email}. Realm: {Realm}", email, _keycloakSettings.Realm);
+
+        var response = await _keycloakApi.FindUsersAsync(_keycloakSettings.Realm, authorization, email, exact: true, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning(
+                "Optional Keycloak user lookup failed. Email: {Email}. StatusCode: {StatusCode}",
+                email,
+                response.StatusCode);
+
+            return Error.Failure("IdentityProvider.UserLookupFailed", "Could not find the user in the identity provider.");
+        }
+
+        var users = response.Content ?? [];
+        if (users.Count == 0)
+        {
+            _logger.LogInformation("Optional Keycloak user lookup returned no users. Email: {Email}", email);
+            return (string?)null;
+        }
+
+        if (users.Count != 1 || string.IsNullOrWhiteSpace(users[0].Id))
+        {
+            _logger.LogWarning("Optional Keycloak user lookup returned no single user. Email: {Email}. Count: {UserCount}", email, users.Count);
+            return Error.Failure("IdentityProvider.UserLookupAmbiguous", "Could not resolve a single user in the identity provider.");
+        }
+
+        var user = users[0];
+        _logger.LogInformation("Optional Keycloak user lookup completed. Email: {Email}. KeycloakUserId: {KeycloakUserId}", email, user.Id);
 
         return user.Id;
     }
@@ -320,7 +491,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 roleName,
                 roleResponse.StatusCode);
 
-            return Error.Failure("IdentityProvider.GetRoleFailed", "Could not resolve the donor role in the identity provider.");
+            return Error.Failure("IdentityProvider.GetRoleFailed", "Could not resolve the realm role in the identity provider.");
         }
 
         _logger.LogInformation(
@@ -343,7 +514,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 keycloakUserId,
                 assignResponse.StatusCode);
 
-            return Error.Failure("IdentityProvider.AssignRoleFailed", "Could not assign the donor role in the identity provider.");
+            return Error.Failure("IdentityProvider.AssignRoleFailed", "Could not assign the realm role in the identity provider.");
         }
 
         _logger.LogInformation("Keycloak role assignment completed. RoleName: {RoleName}. KeycloakUserId: {KeycloakUserId}", roleName, keycloakUserId);
@@ -358,20 +529,60 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         _logger.LogInformation("Compensating Keycloak user delete completed. KeycloakUserId: {KeycloakUserId}", keycloakUserId);
     }
 
-    private static CreateKeycloakUserRequest CreateUserRequest(CreateDonorIdentityUserRequest request)
+    private async Task<Error?> ResetPasswordAsync(
+        string keycloakUserId,
+        string password,
+        string authorization,
+        CancellationToken cancellationToken)
     {
-        var (firstName, lastName) = SplitFullName(request.FullName);
+        var response = await _keycloakApi.ResetPasswordAsync(
+            _keycloakSettings.Realm,
+            keycloakUserId,
+            authorization,
+            new KeycloakCredential("password", password, Temporary: false),
+            cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        _logger.LogWarning(
+            "Keycloak password reset failed. KeycloakUserId: {KeycloakUserId}. StatusCode: {StatusCode}",
+            keycloakUserId,
+            response.StatusCode);
+
+        return Error.Failure("IdentityProvider.ResetPasswordFailed", "Could not reset manager password in the identity provider.");
+    }
+
+    private Task<IApiResponse> CreateKeycloakUserAsync(
+        string fullName,
+        string email,
+        string password,
+        string authorization,
+        CancellationToken cancellationToken)
+    {
+        return _keycloakApi.CreateUserAsync(
+            _keycloakSettings.Realm,
+            authorization,
+            CreateUserRequest(fullName, email, password),
+            cancellationToken);
+    }
+
+    private static CreateKeycloakUserRequest CreateUserRequest(string fullName, string email, string password)
+    {
+        var (firstName, lastName) = SplitFullName(fullName);
 
         return new CreateKeycloakUserRequest(
-            request.Email,
-            request.Email,
+            email,
+            email,
             firstName,
             lastName,
             Enabled: true,
             EmailVerified: true,
             Credentials:
             [
-                new KeycloakCredential("password", request.Password, Temporary: false)
+                new KeycloakCredential("password", password, Temporary: false)
             ],
             RequiredActions: []);
     }

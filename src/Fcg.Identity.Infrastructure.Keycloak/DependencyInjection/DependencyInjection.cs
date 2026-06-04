@@ -19,6 +19,8 @@ namespace Fcg.Identity.Infrastructure.Keycloak.DependencyInjection;
 [ExcludeFromCodeCoverage]
 public static class DependencyInjection
 {
+    private const string AccessTokenCookieName = "fcg_access_token";
+
     public static IServiceCollection AddKeycloakInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddKeycloakOptions(configuration);
@@ -63,6 +65,19 @@ public static class DependencyInjection
             jwtBearerOptions =>
             {
                 jwtBearerOptions.RequireHttpsMetadata = false;
+                jwtBearerOptions.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (string.IsNullOrWhiteSpace(context.Token)
+                            && context.Request.Cookies.TryGetValue(AccessTokenCookieName, out var accessToken))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
                 jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateAudience = false,

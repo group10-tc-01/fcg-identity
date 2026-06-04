@@ -42,6 +42,8 @@ public static class PipelineDependencyInjection
 
         app.UseHttpsRedirection();
 
+        app.UseCors();
+
         app.UseAuthentication();
         app.UseAuthorization();
 

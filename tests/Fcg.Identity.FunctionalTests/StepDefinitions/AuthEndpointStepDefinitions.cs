@@ -180,19 +180,27 @@ public sealed class AuthEndpointStepDefinitions
     [Then("a resposta deve conter o token de acesso")]
     public async Task Then_ARespostaDeveConterOTokenDeAcesso()
     {
-        var payload = await ReadResponseAsync<LoginResponse>();
+        var payload = await ReadResponseAsync<AuthSessionResponse>();
 
         payload.Data.Should().NotBeNull();
         payload.Data!.AccessToken.Should().Be("access-token");
+        payload.Data.RefreshToken.Should().Be("refresh-token");
+        payload.Data.TokenType.Should().Be("Bearer");
+        _response!.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
+        cookies.Should().Contain(cookie => cookie.Contains("fcg_access_token=access-token"));
     }
 
     [Then("a resposta deve conter o novo token de acesso")]
     public async Task Then_ARespostaDeveConterONovoTokenDeAcesso()
     {
-        var payload = await ReadResponseAsync<LoginResponse>();
+        var payload = await ReadResponseAsync<AuthSessionResponse>();
 
         payload.Data.Should().NotBeNull();
         payload.Data!.AccessToken.Should().Be("new-access-token");
+        payload.Data.RefreshToken.Should().Be("new-refresh-token");
+        payload.Data.TokenType.Should().Be("Bearer");
+        _response!.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
+        cookies.Should().Contain(cookie => cookie.Contains("fcg_access_token=new-access-token"));
     }
 
     [Then("a resposta deve conter o perfil do doador autenticado")]

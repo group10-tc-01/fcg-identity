@@ -8,6 +8,9 @@ public sealed class FakeIdentityProvider : IIdentityProvider
     private Result<CreateDonorIdentityUserResponse> _createDonorResult =
         new CreateDonorIdentityUserResponse(Guid.NewGuid().ToString());
 
+    private Result<EnsureManagerIdentityUserResponse> _ensureManagerResult =
+        new EnsureManagerIdentityUserResponse("manager-keycloak-user-id");
+
     private Result<LoginIdentityUserResponse> _loginResult =
         new LoginIdentityUserResponse("access-token", "refresh-token", 300, "Bearer");
 
@@ -16,6 +19,9 @@ public sealed class FakeIdentityProvider : IIdentityProvider
 
     public int CreateDonorCalls { get; private set; }
     public CreateDonorIdentityUserRequest? LastCreateDonorRequest { get; private set; }
+
+    public int EnsureManagerCalls { get; private set; }
+    public EnsureManagerIdentityUserRequest? LastEnsureManagerRequest { get; private set; }
 
     public int LoginCalls { get; private set; }
     public LoginIdentityUserRequest? LastLoginRequest { get; private set; }
@@ -26,10 +32,13 @@ public sealed class FakeIdentityProvider : IIdentityProvider
     public void Reset()
     {
         _createDonorResult = new CreateDonorIdentityUserResponse(Guid.NewGuid().ToString());
+        _ensureManagerResult = new EnsureManagerIdentityUserResponse("manager-keycloak-user-id");
         _loginResult = new LoginIdentityUserResponse("access-token", "refresh-token", 300, "Bearer");
         _refreshTokenResult = new LoginIdentityUserResponse("new-access-token", "new-refresh-token", 300, "Bearer");
         CreateDonorCalls = 0;
         LastCreateDonorRequest = null;
+        EnsureManagerCalls = 0;
+        LastEnsureManagerRequest = null;
         LoginCalls = 0;
         LastLoginRequest = null;
         RefreshTokenCalls = 0;
@@ -39,6 +48,11 @@ public sealed class FakeIdentityProvider : IIdentityProvider
     public void ConfigureCreateDonorResult(Result<CreateDonorIdentityUserResponse> result)
     {
         _createDonorResult = result;
+    }
+
+    public void ConfigureEnsureManagerResult(Result<EnsureManagerIdentityUserResponse> result)
+    {
+        _ensureManagerResult = result;
     }
 
     public void ConfigureLoginResult(Result<LoginIdentityUserResponse> result)
@@ -59,6 +73,16 @@ public sealed class FakeIdentityProvider : IIdentityProvider
         LastCreateDonorRequest = request;
 
         return Task.FromResult(_createDonorResult);
+    }
+
+    public Task<Result<EnsureManagerIdentityUserResponse>> EnsureManagerAsync(
+        EnsureManagerIdentityUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureManagerCalls++;
+        LastEnsureManagerRequest = request;
+
+        return Task.FromResult(_ensureManagerResult);
     }
 
     public Task<Result<LoginIdentityUserResponse>> LoginAsync(
