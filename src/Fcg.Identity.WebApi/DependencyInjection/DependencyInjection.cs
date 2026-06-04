@@ -49,7 +49,13 @@ public static class DependencyInjection
         services
             .AddOptions<ManagerSeedSettings>()
             .Bind(configuration.GetRequiredSection(ManagerSeedSettings.SectionName))
-            .ValidateDataAnnotations()
+            .Validate(
+                settings => !settings.Enabled ||
+                    (!string.IsNullOrWhiteSpace(settings.FullName) &&
+                     !string.IsNullOrWhiteSpace(settings.Email) &&
+                     new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(settings.Email) &&
+                     !string.IsNullOrWhiteSpace(settings.Password)),
+                "ManagerSeed FullName, Email and Password must be valid when ManagerSeed is enabled.")
             .ValidateOnStart();
 
         services.AddHostedService<ManagerSeedHostedService>();
