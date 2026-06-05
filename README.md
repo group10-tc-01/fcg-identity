@@ -1,8 +1,8 @@
-# fcg-identity
+# fcs-identity
 
 Serviço de **Identidade e Acesso** da plataforma **Conexão Solidária**. Atua como fachada do Keycloak e mantém os perfis de domínio (`DonorProfile` e `ManagerProfile`) associados aos usuários autenticáveis.
 
-> Microsserviço que compõe o MVP da Conexão Solidária junto a `fcg-campaigns`, `fcg-donations`, `fcg-donation-worker`, `fcg-solidarity-web` e `fcg-solidarity-infra`.
+> Microsserviço que compõe o MVP da Conexão Solidária junto a `fcs-campaigns`, `fcs-donations`, `fcs-donation-worker`, `fcs-solidarity-web` e `fcs-solidarity-infra`.
 
 ---
 
@@ -17,20 +17,20 @@ Serviço de **Identidade e Acesso** da plataforma **Conexão Solidária**. Atua 
 
 A aplicação **não** armazena senha nem hash de senha. As credenciais permanecem no Keycloak.
 
-Documentação completa da arquitetura: [group10-tc-01/fcg-fase05-docs](https://github.com/group10-tc-01/fcg-fase05-docs).
+Documentação completa da arquitetura: [group10-tc-01/fcs-fase05-docs](https://github.com/group10-tc-01/fcs-fase05-docs).
 
 Referências diretas:
 
-- [Visão geral da arquitetura](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/architecture/overview.md)
-- [Modelo da fcg-identity](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/architecture/fcg-identity-model.md)
-- [Endpoints consolidados](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/architecture/endpoints.md)
+- [Visão geral da arquitetura](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/overview.md)
+- [Modelo da fcs-identity](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/fcs-identity-model.md)
+- [Endpoints consolidados](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/endpoints.md)
 
 ADRs relevantes:
 
-- [ADR 0001 — Keycloak atrás da fcg-identity](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0001-keycloak-behind-identity-api.md)
-- [ADR 0003 — Provisionamento de GestorONG no Keycloak](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0003-provision-gestorong-in-keycloak.md)
-- [ADR 0004 — Registro de Doador via fcg-identity](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0004-register-doador-through-identity-api.md)
-- [ADR 0011 — SQL Server para databases de serviço](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0011-use-sql-server-for-service-databases.md)
+- [ADR 0001 — Keycloak atrás da fcs-identity](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0001-keycloak-behind-identity-api.md)
+- [ADR 0003 — Provisionamento de GestorONG no Keycloak](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0003-provision-gestorong-in-keycloak.md)
+- [ADR 0004 — Registro de Doador via fcs-identity](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0004-register-doador-through-identity-api.md)
+- [ADR 0011 — SQL Server para databases de serviço](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0011-use-sql-server-for-service-databases.md)
 
 ---
 
@@ -51,24 +51,24 @@ Roles canônicas do MVP:
 
 ```
 src/
-  Fcg.Identity.Domain/                  # DonorProfile, ManagerProfile, value objects
-  Fcg.Identity.Application/             # Casos de uso, CQRS, validação
-  Fcg.Identity.Infrastructure.Auth/     # Validação de JWT
-  Fcg.Identity.Infrastructure.Http/     # Clientes HTTP (Refit/Polly)
-  Fcg.Identity.Infrastructure.Keycloak/ # Integração com Admin API + token endpoint
-  Fcg.Identity.Infrastructure.SqlServer/# EF Core + IdentityDb
-  Fcg.Identity.Infrastructure.Kafka/    # Publicação de eventos quando aplicável
-  Fcg.Identity.Messages/                # Contratos de eventos
-  Fcg.Identity.WebApi/                  # Controllers v1, middlewares, DI, /health, /metrics
+  Fcs.Identity.Domain/                  # DonorProfile, ManagerProfile, value objects
+  Fcs.Identity.Application/             # Casos de uso, CQRS, validação
+  Fcs.Identity.Infrastructure.Auth/     # Validação de JWT
+  Fcs.Identity.Infrastructure.Http/     # Clientes HTTP (Refit/Polly)
+  Fcs.Identity.Infrastructure.Keycloak/ # Integração com Admin API + token endpoint
+  Fcs.Identity.Infrastructure.SqlServer/# EF Core + IdentityDb
+  Fcs.Identity.Infrastructure.Kafka/    # Publicação de eventos quando aplicável
+  Fcs.Identity.Messages/                # Contratos de eventos
+  Fcs.Identity.WebApi/                  # Controllers v1, middlewares, DI, /health, /metrics
 tests/
-  Fcg.Identity.UnitTests/
-  Fcg.Identity.IntegratedTests/
-  Fcg.Identity.FunctionalTests/
-  Fcg.Identity.ArchitectureTests/
-  Fcg.Identity.CommomTestsUtilities/
+  Fcs.Identity.UnitTests/
+  Fcs.Identity.IntegratedTests/
+  Fcs.Identity.FunctionalTests/
+  Fcs.Identity.ArchitectureTests/
+  Fcs.Identity.CommomTestsUtilities/
 ```
 
-Estrutura interna alinhada ao padrão da fase 04 ([ADR 0023](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0023-use-phase-04-dotnet-service-structure.md)).
+Estrutura interna alinhada ao padrão da fase 04 ([ADR 0023](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0023-use-phase-04-dotnet-service-structure.md)).
 
 ---
 
@@ -85,7 +85,7 @@ Base path: `/api/v1`.
 | GET    | `/health`                         | Operacional   | Healthcheck                          |
 | GET    | `/metrics`                        | Operacional   | Métricas Prometheus/OpenTelemetry    |
 
-Padrão de resposta `ApiResponse<T>` documentado em [endpoints.md](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/architecture/endpoints.md).
+Padrão de resposta `ApiResponse<T>` documentado em [endpoints.md](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/endpoints.md).
 
 ### Exemplo: cadastrar Doador
 
@@ -128,7 +128,7 @@ Resposta:
 }
 ```
 
-O `accessToken` deve ser enviado como `Authorization: Bearer <jwt>` nas demais APIs (`fcg-campaigns`, `fcg-donations`).
+O `accessToken` deve ser enviado como `Authorization: Bearer <jwt>` nas demais APIs (`fcs-campaigns`, `fcs-donations`).
 
 ---
 
@@ -142,7 +142,7 @@ O `accessToken` deve ser enviado como `Authorization: Bearer <jwt>` nas demais A
 
 ## Subindo o ambiente local
 
-O `docker-compose.yml` deste repositório sobe **apenas** as dependências deste serviço (SQL Server, Keycloak, Kafka, Seq) e, opcionalmente, a própria API. Para o ambiente completo integrado da Conexão Solidária utilize o repositório `fcg-solidarity-infra`.
+O `docker-compose.yml` deste repositório sobe **apenas** as dependências deste serviço (SQL Server, Keycloak, Kafka, Seq) e, opcionalmente, a própria API. Para o ambiente completo integrado da Conexão Solidária utilize o repositório `fcs-solidarity-infra`.
 
 ### 1. Subir dependências
 
@@ -163,7 +163,7 @@ URLs úteis:
 ```bash
 dotnet restore
 dotnet build
-dotnet run --project src/Fcg.Identity.WebApi
+dotnet run --project src/Fcs.Identity.WebApi
 ```
 
 Por padrão a API sobe em `http://localhost:5000` (perfil `Development`). Acesse o Swagger em `http://localhost:5000/swagger`.
@@ -178,7 +178,7 @@ A API ficará exposta em `http://localhost:8080`.
 
 ### 3. Provisionamento do GestorONG (seed)
 
-Na inicialização, a `fcg-identity` executa o seed que:
+Na inicialização, a `fcs-identity` executa o seed que:
 
 1. Cria/encontra o usuário **GestorONG** no Keycloak.
 2. Garante a role `GestorONG` atribuída.
@@ -195,13 +195,13 @@ Credenciais e dados do seed são configuráveis via `appsettings.{Environment}.j
 dotnet test
 
 # Por projeto
-dotnet test tests/Fcg.Identity.UnitTests
-dotnet test tests/Fcg.Identity.IntegratedTests
-dotnet test tests/Fcg.Identity.FunctionalTests
-dotnet test tests/Fcg.Identity.ArchitectureTests
+dotnet test tests/Fcs.Identity.UnitTests
+dotnet test tests/Fcs.Identity.IntegratedTests
+dotnet test tests/Fcs.Identity.FunctionalTests
+dotnet test tests/Fcs.Identity.ArchitectureTests
 ```
 
-Cobertura mínima exigida pela esteira: **80%** ([ADR 0025](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0025-test-strategy-for-apis-and-worker.md)).
+Cobertura mínima exigida pela esteira: **80%** ([ADR 0025](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0025-test-strategy-for-apis-and-worker.md)).
 
 ---
 
@@ -213,13 +213,13 @@ Cobertura mínima exigida pela esteira: **80%** ([ADR 0025](https://github.com/g
   - `GET /health`
   - `GET /metrics`
 
-Esses endpoints **não** são publicados no Azure API Management ([ADR 0027](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0027-keep-internal-apis-cluster-private.md)). Em ambiente local são consumidos pelo `Prometheus`/`Grafana` que rodam em `fcg-solidarity-infra`.
+Esses endpoints **não** são publicados no Azure API Management ([ADR 0027](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0027-keep-internal-apis-cluster-private.md)). Em ambiente local são consumidos pelo `Prometheus`/`Grafana` que rodam em `fcs-solidarity-infra`.
 
 ---
 
 ## CI/CD
 
-A esteira está em `.github/workflows/` reutilizando os workflows reutilizáveis do repositório `fcg-pipelines` ([ADR 0022](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0022-reuse-fcg-pipelines-for-ci-cd.md)):
+A esteira está em `.github/workflows/` reutilizando os workflows reutilizáveis do repositório `fcs-pipelines` ([ADR 0022](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0022-reuse-fcs-pipelines-for-ci-cd.md)):
 
 - `branch-name-check.yml` — política de nomes de branch
 - `dotnet-service-ci.yml` — build .NET, testes, SonarCloud, Trivy, build da imagem Docker
@@ -231,16 +231,16 @@ Gates principais: secret scan (Gitleaks), dependency scan, restore/build, testes
 
 ## Kubernetes
 
-Manifests Kubernetes deste serviço (Deployment, Service, ConfigMap, Secret) ficam em `k8s/` (ou diretório equivalente neste repositório). Para o ambiente integrado (Kind local ou AKS), com Keycloak, Kafka, Prometheus e Grafana compartilhados, consulte o repositório `fcg-solidarity-infra` ([ADR 0026](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0026-use-separated-kubernetes-namespaces.md)).
+Manifests Kubernetes deste serviço (Deployment, Service, ConfigMap, Secret) ficam em `k8s/` (ou diretório equivalente neste repositório). Para o ambiente integrado (Kind local ou AKS), com Keycloak, Kafka, Prometheus e Grafana compartilhados, consulte o repositório `fcs-solidarity-infra` ([ADR 0026](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0026-use-separated-kubernetes-namespaces.md)).
 
-Namespace alvo: `fcg-identity`.
+Namespace alvo: `fcs-identity`.
 
 ---
 
 ## Banco de dados
 
-- Engine: **SQL Server** ([ADR 0011](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0011-use-sql-server-for-service-databases.md))
-- ORM: **Entity Framework Core** ([ADR 0012](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/adr/0012-use-entity-framework-core.md))
+- Engine: **SQL Server** ([ADR 0011](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0011-use-sql-server-for-service-databases.md))
+- ORM: **Entity Framework Core** ([ADR 0012](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/adr/0012-use-entity-framework-core.md))
 - Database: `IdentityDb`
 - Tabelas principais: `DonorProfiles`, `ManagerProfiles`
 
@@ -248,8 +248,8 @@ Para aplicar as migrations:
 
 ```bash
 dotnet ef database update \
-  --project src/Fcg.Identity.Infrastructure.SqlServer \
-  --startup-project src/Fcg.Identity.WebApi
+  --project src/Fcs.Identity.Infrastructure.SqlServer \
+  --startup-project src/Fcs.Identity.WebApi
 ```
 
 ---
@@ -258,12 +258,12 @@ dotnet ef database update \
 
 | Requisito do hackathon                                                | Onde é atendido                                              |
 |-----------------------------------------------------------------------|--------------------------------------------------------------|
-| Autenticação via JWT                                                  | Tokens emitidos pelo Keycloak via `fcg-identity`             |
+| Autenticação via JWT                                                  | Tokens emitidos pelo Keycloak via `fcs-identity`             |
 | RBAC com perfis `GestorONG` e `Doador`                                | Roles canônicas mapeadas no Keycloak e validadas nas APIs    |
 | Cadastro de Doador (público)                                          | `POST /api/v1/auth/register/donor`                           |
-| Senha com hash seguro                                                 | Delegado ao Keycloak (a fcg-identity não guarda senha)       |
+| Senha com hash seguro                                                 | Delegado ao Keycloak (a fcs-identity não guarda senha)       |
 | Endpoint `/health` e `/metrics`                                       | Expostos pela WebApi                                         |
 | Imagem Docker e pipeline                                              | `Dockerfile` + workflows em `.github/workflows`              |
-| Microsserviço distinto                                                | `fcg-identity` separado de `fcg-campaigns` e `fcg-donations` |
+| Microsserviço distinto                                                | `fcs-identity` separado de `fcs-campaigns` e `fcs-donations` |
 
-Os fluxos de **Campanha**, **Intenção de Doação**, **Doação** processada e **Painel de Transparência** são implementados pelos demais serviços da plataforma. Veja a [visão geral da arquitetura](https://github.com/group10-tc-01/fcg-fase05-docs/blob/main/architecture/overview.md).
+Os fluxos de **Campanha**, **Intenção de Doação**, **Doação** processada e **Painel de Transparência** são implementados pelos demais serviços da plataforma. Veja a [visão geral da arquitetura](https://github.com/group10-tc-01/fcs-fase05-docs/blob/main/architecture/overview.md).

@@ -72,7 +72,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: src/Fcg.Identity.WebApi/Dockerfile
+      dockerfile: src/Fcs.Identity.WebApi/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
     depends_on:

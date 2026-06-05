@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>false</IsTestProject>
+		<SonarQubeTestProject>true</SonarQubeTestProject>
+	</PropertyGroup>
+	
+  <ItemGroup>
+    <PackageReference Include="Bogus" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Fcs.Identity.Application\Fcs.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\src\Fcs.Identity.Domain\Fcs.Identity.Domain.csproj" />
+  </ItemGroup>
+</Project>
