@@ -1,0 +1,32 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="docker-compose.yml" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/0 - Domain/">
+    <Project Path="src/Fcs.Identity.Domain/Fcs.Identity.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/1 - Application/">
+    <Project Path="src/Fcs.Identity.Application/Fcs.Identity.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/2 - Infrastructure/">
+    <Project Path="src/Fcs.Identity.Infrastructure.Kafka/Fcs.Identity.Infrastructure.Kafka.csproj" />
+    <Project Path="src/Fcs.Identity.Infrastructure.Keycloak/Fcs.Identity.Infrastructure.Keycloak.csproj" />
+    <Project Path="src/Fcs.Identity.Infrastructure.SqlServer/Fcs.Identity.Infrastructure.SqlServer.csproj" />
+  </Folder>
+  <Folder Name="/src/3 - WebApi/">
+    <Project Path="src/Fcs.Identity.WebApi/Fcs.Identity.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fcs.Identity.ArchitectureTests/Fcs.Identity.ArchitectureTests.csproj" />
+    <Project Path="tests/Fcs.Identity.CommomTestsUtilities/Fcs.Identity.CommomTestsUtilities.csproj" />
+    <Project Path="tests/Fcs.Identity.FunctionalTests/Fcs.Identity.FunctionalTests.csproj" />
+    <Project Path="tests/Fcs.Identity.IntegratedTests/Fcs.Identity.IntegratedTests.csproj" />
+    <Project Path="tests/Fcs.Identity.UnitTests/Fcs.Identity.UnitTests.csproj" />
+  </Folder>
+</Solution>

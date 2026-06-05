@@ -1,0 +1,277 @@
+using System.Net;
+using System.Net.Http.Json;
+using Fcs.Identity.Application.UseCases.Auth.Login;
+using Fcs.Identity.Application.UseCases.Auth.RefreshToken;
+using Fcs.Identity.Application.UseCases.Donors.RegisterDonor;
+using Fcs.Identity.CommomTestsUtilities.Builders.DonorProfiles;
+using Fcs.Identity.CommomTestsUtilities.Builders.Donors;
+using Fcs.Identity.Domain.Abstractions;
+using Fcs.Identity.Domain.DonorProfiles;
+using Fcs.Identity.Domain.Shared.Results;
+using Fcs.Identity.IntegratedTests.Configurations;
+using Fcs.Identity.IntegratedTests.Support;
+using Fcs.Identity.WebApi.Models;
+using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Fcs.Identity.IntegratedTests.WebApi.Controllers.v1;
+
+[Collection(IntegrationTestCollection.Name)]
+public sealed class AuthControllerTests : IAsyncLifetime
+{
+    private readonly CustomWebApplicationFactory _factory;
+    private readonly HttpClient _client;
+
+    public AuthControllerTests(CustomWebApplicationFactory factory)
+    {
+        _factory = factory;
+        _client = factory.CreateClient();
+    }
+
+    public Task InitializeAsync()
+    {
+        return _factory.ResetDatabaseAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RegisterDonorEndpoint_Called_When_RequestIsValid_Then_ShouldReturnCreated()
+    {
+        // Arrange
+        var command = new RegisterDonorCommandBuilder().Build();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/register/donor", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<RegisterDonorResponse>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeTrue();
+        payload.Data.Should().NotBeNull();
+        payload.Data!.Email.Should().Be(command.Email);
+        _factory.IdentityProvider.CreateDonorCalls.Should().Be(1);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RegisterDonorEndpoint_Called_When_RequestIsInvalid_Then_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var command = new RegisterDonorCommandBuilder()
+            .WithFullName(string.Empty)
+            .WithEmail("invalid-email")
+            .Build();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/register/donor", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        _factory.IdentityProvider.CreateDonorCalls.Should().Be(0);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RegisterDonorEndpoint_Called_When_EmailAlreadyExists_Then_ShouldReturnConflict()
+    {
+        // Arrange
+        var existingDonorProfile = new DonorProfileBuilder().Build();
+        await SaveDonorProfileAsync(existingDonorProfile);
+        var command = new RegisterDonorCommandBuilder()
+            .WithEmail(existingDonorProfile.Email.Value)
+            .Build();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/register/donor", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        payload.Message.Should().Be("A donor profile with this email already exists.");
+        _factory.IdentityProvider.CreateDonorCalls.Should().Be(0);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RegisterDonorEndpoint_Called_When_CpfAlreadyExists_Then_ShouldReturnConflict()
+    {
+        // Arrange
+        var existingDonorProfile = new DonorProfileBuilder().Build();
+        await SaveDonorProfileAsync(existingDonorProfile);
+        var command = new RegisterDonorCommandBuilder()
+            .WithCpf(existingDonorProfile.Cpf.Value)
+            .Build();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/register/donor", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        payload.Message.Should().Be("A donor profile with this CPF already exists.");
+        _factory.IdentityProvider.CreateDonorCalls.Should().Be(0);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RegisterDonorEndpoint_Called_When_IdentityProviderReturnsConflict_Then_ShouldReturnConflict()
+    {
+        // Arrange
+        _factory.IdentityProvider.ConfigureCreateDonorResult(
+            Error.Conflict("IdentityProvider.UserAlreadyExists", "A user with this email already exists in the identity provider."));
+        var command = new RegisterDonorCommandBuilder().Build();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/register/donor", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        payload.Message.Should().Be("A user with this email already exists in the identity provider.");
+        _factory.IdentityProvider.CreateDonorCalls.Should().Be(1);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_LoginEndpoint_Called_When_RequestIsValid_Then_ShouldReturnOk()
+    {
+        // Arrange
+        var command = new LoginCommand("doador@email.com", "Password123!");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<AuthSessionResponse>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeTrue();
+        payload.Data.Should().NotBeNull();
+        payload.Data!.AccessToken.Should().Be("access-token");
+        payload.Data.RefreshToken.Should().Be("refresh-token");
+        payload.Data.TokenType.Should().Be("Bearer");
+        response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
+        var accessTokenCookie = cookies.Should().ContainSingle(cookie => cookie.Contains("fcs_access_token=access-token")).Subject;
+        accessTokenCookie.Should().Contain("samesite=lax");
+        accessTokenCookie.Should().NotContain("secure");
+        _factory.IdentityProvider.LoginCalls.Should().Be(1);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_LoginEndpoint_Called_When_RequestIsInvalid_Then_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var command = new LoginCommand("invalid-email", string.Empty);
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        _factory.IdentityProvider.LoginCalls.Should().Be(0);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_LoginEndpoint_Called_When_CredentialsAreInvalid_Then_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        _factory.IdentityProvider.ConfigureLoginResult(
+            Error.Unauthorized("IdentityProvider.InvalidCredentials", "Invalid email or password."));
+        var command = new LoginCommand("doador@email.com", "wrong-password");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        payload.Message.Should().Be("Invalid email or password.");
+        _factory.IdentityProvider.LoginCalls.Should().Be(1);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RefreshEndpoint_Called_When_RequestIsValid_Then_ShouldReturnOk()
+    {
+        // Arrange
+        var command = new RefreshTokenCommand("refresh-token");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<AuthSessionResponse>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeTrue();
+        payload.Data.Should().NotBeNull();
+        payload.Data!.AccessToken.Should().Be("new-access-token");
+        payload.Data.RefreshToken.Should().Be("new-refresh-token");
+        payload.Data.TokenType.Should().Be("Bearer");
+        response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
+        var accessTokenCookie = cookies.Should().ContainSingle(cookie => cookie.Contains("fcs_access_token=new-access-token")).Subject;
+        accessTokenCookie.Should().Contain("samesite=lax");
+        accessTokenCookie.Should().NotContain("secure");
+        _factory.IdentityProvider.RefreshTokenCalls.Should().Be(1);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RefreshEndpoint_Called_When_RequestIsInvalid_Then_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var command = new RefreshTokenCommand(string.Empty);
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        _factory.IdentityProvider.RefreshTokenCalls.Should().Be(0);
+    }
+
+    [DockerAvailableFact]
+    public async Task Given_RefreshEndpoint_Called_When_RefreshTokenIsInvalid_Then_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        _factory.IdentityProvider.ConfigureRefreshTokenResult(
+            Error.Unauthorized("IdentityProvider.InvalidRefreshToken", "Invalid refresh token."));
+        var command = new RefreshTokenCommand("invalid-refresh-token");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", command);
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        payload.Should().NotBeNull();
+        payload!.Success.Should().BeFalse();
+        payload.Message.Should().Be("Invalid refresh token.");
+        _factory.IdentityProvider.RefreshTokenCalls.Should().Be(1);
+    }
+
+    private async Task SaveDonorProfileAsync(DonorProfile donorProfile)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<IDonorProfileRepository>();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+        await repository.AddAsync(donorProfile, CancellationToken.None);
+        await unitOfWork.SaveChangesAsync(CancellationToken.None);
+    }
+}
