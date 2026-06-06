@@ -40,6 +40,14 @@ public sealed class SwaggerEndpointDocumentationOperationFilter : IOperationFilt
                     ["400"] = new("Payload invalido ou refresh token ausente.", SwaggerExamples.ValidationError),
                     ["401"] = new("Refresh token invalido ou expirado.", SwaggerExamples.InvalidRefreshTokenError)
                 }),
+            [nameof(Controllers.v1.AuthController.Logout)] = new(
+                "Encerrar sessao",
+                "Remove os cookies de autenticacao emitidos pela API para encerrar a sessao do usuario.",
+                null,
+                new Dictionary<string, ResponseDocumentation>
+                {
+                    ["204"] = new("Sessao encerrada com sucesso.")
+                }),
             [nameof(Controllers.v1.MeController.Get)] = new(
                 "Consultar meu perfil",
                 "Retorna o perfil local do usuario autenticado. Requer Bearer token valido com role Doador ou GestorONG.",
