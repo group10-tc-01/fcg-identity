@@ -1,6 +1,7 @@
 using Fcs.Identity.Domain.Abstractions;
 using Fcs.Identity.Domain.Shared.Results;
 using Fcs.Identity.Domain.Shared.ValueObjects;
+using Fcs.Identity.Resources.Messages;
 
 namespace Fcs.Identity.Domain.ManagerProfiles;
 
@@ -29,17 +30,17 @@ public sealed class ManagerProfile : BaseEntity
 
         if (string.IsNullOrWhiteSpace(normalizedKeycloakUserId))
         {
-            return Error.Validation("ManagerProfile.KeycloakUserIdRequired", "Keycloak user id is required.");
+            return Error.Validation(IdentityErrorCodes.ManagerProfileKeycloakUserIdRequired, IdentityMessages.KeycloakUserIdRequired);
         }
 
         if (string.IsNullOrWhiteSpace(normalizedFullName))
         {
-            return Error.Validation("ManagerProfile.FullNameRequired", "Full name is required.");
+            return Error.Validation(IdentityErrorCodes.ManagerProfileFullNameRequired, IdentityMessages.FullNameRequired);
         }
 
         if (string.IsNullOrWhiteSpace(normalizedEmail))
         {
-            return Error.Validation("ManagerProfile.EmailRequired", "Email is required.");
+            return Error.Validation(IdentityErrorCodes.ManagerProfileEmailRequired, IdentityMessages.EmailRequired);
         }
 
         var emailResult = Email.Create(normalizedEmail);
@@ -61,7 +62,7 @@ public sealed class ManagerProfile : BaseEntity
 
         if (string.IsNullOrWhiteSpace(normalizedFullName))
         {
-            return Error.Validation("ManagerProfile.FullNameRequired", "Full name is required.");
+            return Error.Validation(IdentityErrorCodes.ManagerProfileFullNameRequired, IdentityMessages.FullNameRequired);
         }
 
         var emailResult = Email.Create(email);

@@ -1,4 +1,5 @@
 using Fcs.Identity.Domain.Shared.ValueObjects;
+using Fcs.Identity.Resources.Messages;
 using FluentValidation;
 
 namespace Fcs.Identity.Application.UseCases.Donors.RegisterDonor;
@@ -9,24 +10,24 @@ public sealed class RegisterDonorCommandValidator : AbstractValidator<RegisterDo
     {
         RuleFor(command => command.FullName)
             .NotEmpty()
-            .WithMessage("Full name is required.");
+            .WithMessage(IdentityMessages.FullNameRequired);
 
         RuleFor(command => command.Email)
             .NotEmpty()
-            .WithMessage("Email is required.")
+            .WithMessage(IdentityMessages.EmailRequired)
             .Must(email => Email.Create(email).IsSuccess)
-            .WithMessage("Email is invalid.");
+            .WithMessage(IdentityMessages.EmailInvalid);
 
         RuleFor(command => command.Cpf)
             .NotEmpty()
-            .WithMessage("CPF is required.")
+            .WithMessage(IdentityMessages.CpfRequired)
             .Must(cpf => Cpf.Create(cpf).IsSuccess)
-            .WithMessage("CPF is invalid.");
+            .WithMessage(IdentityMessages.CpfInvalid);
 
         RuleFor(command => command.Password)
             .NotEmpty()
-            .WithMessage("Password is required.")
+            .WithMessage(IdentityMessages.PasswordRequired)
             .MinimumLength(8)
-            .WithMessage("Password must have at least 8 characters.");
+            .WithMessage(IdentityMessages.PasswordMinimumLength);
     }
 }

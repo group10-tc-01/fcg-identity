@@ -1,6 +1,7 @@
 using Fcs.Identity.Domain.Abstractions;
 using Fcs.Identity.Domain.Shared.Results;
 using Fcs.Identity.Domain.Shared.ValueObjects;
+using Fcs.Identity.Resources.Messages;
 
 namespace Fcs.Identity.Domain.DonorProfiles;
 
@@ -32,22 +33,22 @@ public sealed class DonorProfile : BaseEntity
 
         if (string.IsNullOrWhiteSpace(normalizedKeycloakUserId))
         {
-            return Error.Validation("DonorProfile.KeycloakUserIdRequired", "Keycloak user id is required.");
+            return Error.Validation(IdentityErrorCodes.DonorProfileKeycloakUserIdRequired, IdentityMessages.KeycloakUserIdRequired);
         }
 
         if (string.IsNullOrWhiteSpace(normalizedFullName))
         {
-            return Error.Validation("DonorProfile.FullNameRequired", "Full name is required.");
+            return Error.Validation(IdentityErrorCodes.DonorProfileFullNameRequired, IdentityMessages.FullNameRequired);
         }
 
         if (string.IsNullOrWhiteSpace(normalizedEmail))
         {
-            return Error.Validation("DonorProfile.EmailRequired", "Email is required.");
+            return Error.Validation(IdentityErrorCodes.DonorProfileEmailRequired, IdentityMessages.EmailRequired);
         }
 
         if (string.IsNullOrWhiteSpace(normalizedCpf))
         {
-            return Error.Validation("DonorProfile.CpfRequired", "CPF is required.");
+            return Error.Validation(IdentityErrorCodes.DonorProfileCpfRequired, IdentityMessages.CpfRequired);
         }
 
         var emailResult = Email.Create(normalizedEmail);
@@ -76,7 +77,7 @@ public sealed class DonorProfile : BaseEntity
 
         if (string.IsNullOrWhiteSpace(normalizedFullName))
         {
-            return Error.Validation("DonorProfile.FullNameRequired", "Full name is required.");
+            return Error.Validation(IdentityErrorCodes.DonorProfileFullNameRequired, IdentityMessages.FullNameRequired);
         }
 
         var emailResult = Email.Create(email);

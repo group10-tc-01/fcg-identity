@@ -1,2 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Fcs.Identity.Resources\Fcs.Identity.Resources.csproj" />
+  </ItemGroup>
 </Project>

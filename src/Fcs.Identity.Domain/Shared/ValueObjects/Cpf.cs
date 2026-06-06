@@ -1,4 +1,5 @@
 using Fcs.Identity.Domain.Shared.Results;
+using Fcs.Identity.Resources.Messages;
 
 namespace Fcs.Identity.Domain.Shared.ValueObjects;
 
@@ -19,12 +20,12 @@ public readonly record struct Cpf
 
         if (string.IsNullOrWhiteSpace(normalizedCpf))
         {
-            return Error.Validation("Cpf.Required", "CPF is required.");
+            return Error.Validation(IdentityErrorCodes.CpfRequired, IdentityMessages.CpfRequired);
         }
 
         if (!IsValid(normalizedCpf))
         {
-            return Error.Validation("Cpf.Invalid", "CPF is invalid.");
+            return Error.Validation(IdentityErrorCodes.CpfInvalid, IdentityMessages.CpfInvalid);
         }
 
         return new Cpf(normalizedCpf);

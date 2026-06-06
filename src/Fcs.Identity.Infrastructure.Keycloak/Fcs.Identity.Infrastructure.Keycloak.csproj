@@ -13,5 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Fcs.Identity.Application\Fcs.Identity.Application.csproj" />
+    <ProjectReference Include="..\Fcs.Identity.Resources\Fcs.Identity.Resources.csproj" />
   </ItemGroup>
 </Project>
