@@ -4,6 +4,7 @@ using Fcs.Identity.Application.Audit;
 using Fcs.Identity.Domain.Abstractions;
 using Fcs.Identity.Domain.DonorProfiles;
 using Fcs.Identity.Domain.Shared.Results;
+using Fcs.Identity.Resources.Messages;
 using Microsoft.Extensions.Logging;
 
 namespace Fcs.Identity.Application.UseCases.Donors.RegisterDonor;
@@ -44,14 +45,14 @@ public sealed class RegisterDonorCommandHandler : ICommandHandler<RegisterDonorC
         if (await _donorProfileRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken))
         {
             _logger.LogWarning("Register donor flow stopped because email {Email} already exists", normalizedEmail);
-            return Error.Conflict("DonorProfile.EmailAlreadyExists", "A donor profile with this email already exists.");
+            return Error.Conflict(IdentityErrorCodes.DonorProfileEmailAlreadyExists, IdentityMessages.DonorProfileEmailAlreadyExists);
         }
 
         _logger.LogInformation("Checking donor uniqueness by CPF {Cpf}", normalizedCpf);
         if (await _donorProfileRepository.ExistsByCpfAsync(normalizedCpf, cancellationToken))
         {
             _logger.LogWarning("Register donor flow stopped because CPF {Cpf} already exists", normalizedCpf);
-            return Error.Conflict("DonorProfile.CpfAlreadyExists", "A donor profile with this CPF already exists.");
+            return Error.Conflict(IdentityErrorCodes.DonorProfileCpfAlreadyExists, IdentityMessages.CpfAlreadyExists);
         }
 
         _logger.LogInformation("Creating donor user in identity provider. Email: {Email}", normalizedEmail);

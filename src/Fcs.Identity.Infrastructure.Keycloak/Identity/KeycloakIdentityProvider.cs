@@ -6,6 +6,7 @@ using Fcs.Identity.Domain.Shared.Results;
 using Fcs.Identity.Infrastructure.Keycloak.Http;
 using Fcs.Identity.Infrastructure.Keycloak.Http.Contracts;
 using Fcs.Identity.Infrastructure.Keycloak.Settings;
+using Fcs.Identity.Resources.Messages;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Refit;
@@ -57,7 +58,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
             if (createUserResponse.StatusCode == HttpStatusCode.Conflict)
             {
                 _logger.LogWarning("Keycloak user creation returned conflict. Email: {Email}", request.Email);
-                return Error.Conflict("IdentityProvider.UserAlreadyExists", "A user with this email already exists in the identity provider.");
+                return Error.Conflict(IdentityErrorCodes.IdentityProviderUserAlreadyExists, IdentityMessages.UserAlreadyExistsInIdentityProvider);
             }
 
             if (!createUserResponse.IsSuccessStatusCode)
@@ -67,7 +68,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                     request.Email,
                     createUserResponse.StatusCode);
 
-                return Error.Failure("IdentityProvider.CreateUserFailed", "Could not create donor user in the identity provider.");
+                return Error.Failure(IdentityErrorCodes.IdentityProviderCreateUserFailed, IdentityMessages.IdentityProviderCreateDonorFailed);
             }
 
             _logger.LogInformation("Looking up created Keycloak user by email {Email}", request.Email);
@@ -110,17 +111,17 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         catch (ApiException exception)
         {
             _logger.LogError(exception, "Keycloak donor creation failed because provider API is unavailable. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUnavailable, IdentityMessages.IdentityProviderUnavailable);
         }
         catch (HttpRequestException exception)
         {
             _logger.LogError(exception, "Keycloak donor creation failed because provider HTTP request failed. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUnavailable, IdentityMessages.IdentityProviderUnavailable);
         }
         catch (TaskCanceledException exception)
         {
             _logger.LogError(exception, "Keycloak donor creation timed out. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Timeout", "The identity provider request timed out.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderTimeout, IdentityMessages.IdentityProviderRequestTimedOut);
         }
     }
 
@@ -166,7 +167,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 if (createUserResponse.StatusCode == HttpStatusCode.Conflict)
                 {
                     _logger.LogWarning("Keycloak manager creation returned conflict. Email: {Email}", request.Email);
-                    return Error.Conflict("IdentityProvider.UserAlreadyExists", "A user with this email already exists in the identity provider.");
+                    return Error.Conflict(IdentityErrorCodes.IdentityProviderUserAlreadyExists, IdentityMessages.UserAlreadyExistsInIdentityProvider);
                 }
 
                 if (!createUserResponse.IsSuccessStatusCode)
@@ -176,7 +177,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                         request.Email,
                         createUserResponse.StatusCode);
 
-                    return Error.Failure("IdentityProvider.CreateUserFailed", "Could not create manager user in the identity provider.");
+                    return Error.Failure(IdentityErrorCodes.IdentityProviderCreateUserFailed, IdentityMessages.IdentityProviderCreateManagerFailed);
                 }
 
                 createdUser = true;
@@ -242,17 +243,17 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         catch (ApiException exception)
         {
             _logger.LogError(exception, "Keycloak manager seed failed because provider API is unavailable. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUnavailable, IdentityMessages.IdentityProviderUnavailable);
         }
         catch (HttpRequestException exception)
         {
             _logger.LogError(exception, "Keycloak manager seed failed because provider HTTP request failed. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUnavailable, IdentityMessages.IdentityProviderUnavailable);
         }
         catch (TaskCanceledException exception)
         {
             _logger.LogError(exception, "Keycloak manager seed timed out. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Timeout", "The identity provider request timed out.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderTimeout, IdentityMessages.IdentityProviderRequestTimedOut);
         }
     }
 
@@ -276,7 +277,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
             if (tokenResponse.StatusCode == HttpStatusCode.Unauthorized)
             {
                 _logger.LogWarning("Keycloak login returned unauthorized. Email: {Email}", request.Email);
-                return Error.Unauthorized("IdentityProvider.InvalidCredentials", "Invalid email or password.");
+                return Error.Unauthorized(IdentityErrorCodes.IdentityProviderInvalidCredentials, IdentityMessages.InvalidCredentials);
             }
 
             if (!tokenResponse.IsSuccessStatusCode)
@@ -286,7 +287,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                     request.Email,
                     tokenResponse.StatusCode);
 
-                return Error.Failure("IdentityProvider.LoginFailed", "Could not authenticate with the identity provider.");
+                return Error.Failure(IdentityErrorCodes.IdentityProviderLoginFailed, IdentityMessages.IdentityProviderAuthenticationFailed);
             }
 
             _logger.LogInformation("Keycloak login completed. Email: {Email}. StatusCode: {StatusCode}", request.Email, tokenResponse.StatusCode);
@@ -296,17 +297,17 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         catch (ApiException exception)
         {
             _logger.LogError(exception, "Keycloak login failed because provider API is unavailable. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUnavailable, IdentityMessages.IdentityProviderUnavailable);
         }
         catch (HttpRequestException exception)
         {
             _logger.LogError(exception, "Keycloak login failed because provider HTTP request failed. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUnavailable, IdentityMessages.IdentityProviderUnavailable);
         }
         catch (TaskCanceledException exception)
         {
             _logger.LogError(exception, "Keycloak login timed out. Email: {Email}", request.Email);
-            return Error.Failure("IdentityProvider.Timeout", "The identity provider request timed out.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderTimeout, IdentityMessages.IdentityProviderRequestTimedOut);
         }
     }
 
@@ -329,13 +330,13 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
             if (tokenResponse.StatusCode == HttpStatusCode.Unauthorized)
             {
                 _logger.LogWarning("Keycloak refresh token returned unauthorized");
-                return Error.Unauthorized("IdentityProvider.InvalidRefreshToken", "Invalid refresh token.");
+                return Error.Unauthorized(IdentityErrorCodes.IdentityProviderInvalidRefreshToken, IdentityMessages.InvalidRefreshToken);
             }
 
             if (!tokenResponse.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Keycloak refresh token failed. StatusCode: {StatusCode}", tokenResponse.StatusCode);
-                return Error.Failure("IdentityProvider.RefreshTokenFailed", "Could not refresh token with the identity provider.");
+                return Error.Failure(IdentityErrorCodes.IdentityProviderRefreshTokenFailed, IdentityMessages.IdentityProviderRefreshTokenFailed);
             }
 
             _logger.LogInformation("Keycloak refresh token completed. StatusCode: {StatusCode}", tokenResponse.StatusCode);
@@ -345,17 +346,17 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         catch (ApiException exception)
         {
             _logger.LogError(exception, "Keycloak refresh token failed because provider API is unavailable");
-            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUnavailable, IdentityMessages.IdentityProviderUnavailable);
         }
         catch (HttpRequestException exception)
         {
             _logger.LogError(exception, "Keycloak refresh token failed because provider HTTP request failed");
-            return Error.Failure("IdentityProvider.Unavailable", "The identity provider is unavailable.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUnavailable, IdentityMessages.IdentityProviderUnavailable);
         }
         catch (TaskCanceledException exception)
         {
             _logger.LogError(exception, "Keycloak refresh token timed out");
-            return Error.Failure("IdentityProvider.Timeout", "The identity provider request timed out.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderTimeout, IdentityMessages.IdentityProviderRequestTimedOut);
         }
     }
 
@@ -381,13 +382,13 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning("Keycloak admin authentication failed. StatusCode: {StatusCode}", response.StatusCode);
-            return Error.Failure("IdentityProvider.AdminAuthenticationFailed", "Could not authenticate with the identity provider admin API.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderAdminAuthenticationFailed, IdentityMessages.IdentityProviderAdminAuthenticationFailed);
         }
 
         if (response.Content is null || string.IsNullOrWhiteSpace(response.Content.AccessToken))
         {
             _logger.LogWarning("Keycloak admin authentication did not return an access token");
-            return Error.Failure("IdentityProvider.AdminTokenMissing", "The identity provider did not return an admin access token.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderAdminTokenMissing, IdentityMessages.IdentityProviderAdminAccessTokenMissing);
         }
 
         _logger.LogInformation("Keycloak admin authentication completed. StatusCode: {StatusCode}", response.StatusCode);
@@ -411,14 +412,14 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 email,
                 response.StatusCode);
 
-            return Error.Failure("IdentityProvider.UserLookupFailed", "Could not find the created user in the identity provider.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUserLookupFailed, IdentityMessages.CreatedUserNotFoundInIdentityProvider);
         }
 
         var users = response.Content ?? [];
         if (users.Count != 1 || string.IsNullOrWhiteSpace(users[0].Id))
         {
             _logger.LogWarning("Keycloak user lookup returned no single user. Email: {Email}. Count: {UserCount}", email, users.Count);
-            return Error.Failure("IdentityProvider.UserLookupFailed", "Could not find the created user in the identity provider.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUserLookupFailed, IdentityMessages.CreatedUserNotFoundInIdentityProvider);
         }
 
         var user = users[0];
@@ -443,7 +444,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 email,
                 response.StatusCode);
 
-            return Error.Failure("IdentityProvider.UserLookupFailed", "Could not find the user in the identity provider.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUserLookupFailed, IdentityMessages.UserNotFoundInIdentityProvider);
         }
 
         var users = response.Content ?? [];
@@ -456,7 +457,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         if (users.Count != 1 || string.IsNullOrWhiteSpace(users[0].Id))
         {
             _logger.LogWarning("Optional Keycloak user lookup returned no single user. Email: {Email}. Count: {UserCount}", email, users.Count);
-            return Error.Failure("IdentityProvider.UserLookupAmbiguous", "Could not resolve a single user in the identity provider.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderUserLookupAmbiguous, IdentityMessages.SingleUserResolutionFailedInIdentityProvider);
         }
 
         var user = users[0];
@@ -481,7 +482,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
         if (roleResponse.StatusCode == HttpStatusCode.NotFound)
         {
             _logger.LogWarning("Keycloak role {RoleName} was not found. Realm: {Realm}", roleName, _keycloakSettings.Realm);
-            return Error.Failure("IdentityProvider.RoleNotFound", $"The role '{roleName}' was not found in the identity provider.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderRoleNotFound, string.Format(IdentityMessages.RoleNotFoundInIdentityProvider, roleName));
         }
 
         if (!roleResponse.IsSuccessStatusCode || roleResponse.Content is null || string.IsNullOrWhiteSpace(roleResponse.Content.Name))
@@ -491,7 +492,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 roleName,
                 roleResponse.StatusCode);
 
-            return Error.Failure("IdentityProvider.GetRoleFailed", "Could not resolve the realm role in the identity provider.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderGetRoleFailed, IdentityMessages.RealmRoleResolutionFailed);
         }
 
         _logger.LogInformation(
@@ -514,7 +515,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
                 keycloakUserId,
                 assignResponse.StatusCode);
 
-            return Error.Failure("IdentityProvider.AssignRoleFailed", "Could not assign the realm role in the identity provider.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderAssignRoleFailed, IdentityMessages.RealmRoleAssignmentFailed);
         }
 
         _logger.LogInformation("Keycloak role assignment completed. RoleName: {RoleName}. KeycloakUserId: {KeycloakUserId}", roleName, keycloakUserId);
@@ -552,7 +553,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
             keycloakUserId,
             response.StatusCode);
 
-        return Error.Failure("IdentityProvider.ResetPasswordFailed", "Could not reset manager password in the identity provider.");
+        return Error.Failure(IdentityErrorCodes.IdentityProviderResetPasswordFailed, IdentityMessages.ManagerPasswordResetFailed);
     }
 
     private Task<IApiResponse> CreateKeycloakUserAsync(
@@ -591,7 +592,7 @@ public sealed class KeycloakIdentityProvider : IIdentityProvider
     {
         if (tokenResponse is null || string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
         {
-            return Error.Failure("IdentityProvider.TokenMissing", "The identity provider did not return an access token.");
+            return Error.Failure(IdentityErrorCodes.IdentityProviderTokenMissing, IdentityMessages.IdentityProviderAccessTokenMissing);
         }
 
         var tokenIdentity = ExtractTokenIdentity(tokenResponse.AccessToken);

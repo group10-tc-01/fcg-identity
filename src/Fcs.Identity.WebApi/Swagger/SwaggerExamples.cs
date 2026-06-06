@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Fcs.Identity.Resources.Messages;
 
 namespace Fcs.Identity.WebApi.Swagger;
 
@@ -51,13 +52,13 @@ public static class SwaggerExamples
 
     public static object ValidationError => Failure("Invalid request data.");
 
-    public static object UnauthorizedError => Failure("Invalid email or password.");
+    public static object UnauthorizedError => Failure(IdentityMessages.InvalidCredentials);
 
-    public static object InvalidRefreshTokenError => Failure("Invalid refresh token.");
+    public static object InvalidRefreshTokenError => Failure(IdentityMessages.InvalidRefreshToken);
 
-    public static object ProfileNotFoundError => Failure("Profile was not found.");
+    public static object ProfileNotFoundError => Failure(IdentityMessages.ProfileNotFound);
 
-    public static object ConflictError => Failure("A user with this email already exists.");
+    public static object ConflictError => Failure(IdentityMessages.UserAlreadyExists);
 
     private static object Success(object data) => new
     {

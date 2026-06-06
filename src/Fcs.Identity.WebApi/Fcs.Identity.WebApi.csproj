@@ -30,5 +30,6 @@
 		<ProjectReference Include="..\Fcs.Identity.Infrastructure.Keycloak\Fcs.Identity.Infrastructure.Keycloak.csproj" />
 		<ProjectReference Include="..\Fcs.Identity.Infrastructure.SqlServer\Fcs.Identity.Infrastructure.SqlServer.csproj" />
 		<ProjectReference Include="..\Fcs.Identity.Infrastructure.Kafka\Fcs.Identity.Infrastructure.Kafka.csproj" />
+		<ProjectReference Include="..\Fcs.Identity.Resources\Fcs.Identity.Resources.csproj" />
 	</ItemGroup>
 </Project>
