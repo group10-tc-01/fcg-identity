@@ -21,30 +21,34 @@ public sealed class AuthController(IMediator mediator) : BaseApiController(media
     {
         var result = await _mediator.Send(command, cancellationToken);
 
-        return result.Match<IActionResult>(
-            response => StatusCode(StatusCodes.Status201Created, ApiResponse<RegisterDonorResponse>.FromSuccess(response)),
-            error => error.ToActionResult());
+        if (result.IsFailure)
+        {
+            return result.Error.ToActionResult();
+        }
+
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<RegisterDonorResponse>.FromSuccess(result.Value));
     }
 
     [HttpPost("login")]
-    [ProducesResponseType(typeof(ApiResponse<AuthSessionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(command, cancellationToken);
 
-        return result.Match<IActionResult>(
-            response =>
-            {
-                AuthCookieWriter.AppendAuthCookies(Request, Response, response);
-                return Ok(ApiResponse<AuthSessionResponse>.FromSuccess(ToSessionResponse(response)));
-            },
-            error => error.ToActionResult());
+        if (result.IsFailure)
+        {
+            return result.Error.ToActionResult();
+        }
+
+        AuthCookieWriter.AppendAuthCookies(Request, Response, result.Value);
+
+        return Ok(ApiResponse<LoginResponse>.FromSuccess(result.Value));
     }
 
     [HttpPost("refresh")]
-    [ProducesResponseType(typeof(ApiResponse<AuthSessionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command, CancellationToken cancellationToken)
@@ -55,13 +59,14 @@ public sealed class AuthController(IMediator mediator) : BaseApiController(media
 
         var result = await _mediator.Send(command with { RefreshToken = refreshToken ?? string.Empty }, cancellationToken);
 
-        return result.Match<IActionResult>(
-            response =>
-            {
-                AuthCookieWriter.AppendAuthCookies(Request, Response, response);
-                return Ok(ApiResponse<AuthSessionResponse>.FromSuccess(ToSessionResponse(response)));
-            },
-            error => error.ToActionResult());
+        if (result.IsFailure)
+        {
+            return result.Error.ToActionResult();
+        }
+
+        AuthCookieWriter.AppendAuthCookies(Request, Response, result.Value);
+
+        return Ok(ApiResponse<LoginResponse>.FromSuccess(result.Value));
     }
 
     [HttpPost("logout")]
@@ -72,11 +77,4 @@ public sealed class AuthController(IMediator mediator) : BaseApiController(media
 
         return NoContent();
     }
-
-    private static AuthSessionResponse ToSessionResponse(LoginResponse response) =>
-        new(
-            response.AccessToken,
-            response.RefreshToken,
-            response.ExpiresIn,
-            response.TokenType);
 }

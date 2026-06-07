@@ -19,8 +19,11 @@ public sealed class MeController(IMediator mediator) : BaseApiController(mediato
     {
         var result = await _mediator.Send(new GetMeQuery(), cancellationToken);
 
-        return result.Match<IActionResult>(
-            response => Ok(ApiResponse<GetMeResponse>.FromSuccess(response)),
-            error => error.ToActionResult());
+        if (result.IsFailure)
+        {
+            return result.Error.ToActionResult();
+        }
+
+        return Ok(ApiResponse<GetMeResponse>.FromSuccess(result.Value));
     }
 }
