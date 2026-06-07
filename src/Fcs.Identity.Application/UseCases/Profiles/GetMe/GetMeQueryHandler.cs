@@ -5,6 +5,7 @@ using Fcs.Identity.Domain.DonorProfiles;
 using Fcs.Identity.Domain.ManagerProfiles;
 using Fcs.Identity.Domain.Shared;
 using Fcs.Identity.Domain.Shared.Results;
+using Fcs.Identity.Resources.Messages;
 using Microsoft.Extensions.Logging;
 
 namespace Fcs.Identity.Application.UseCases.Profiles.GetMe;
@@ -42,7 +43,7 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
         if (!_currentUser.IsAuthenticated || string.IsNullOrWhiteSpace(_currentUser.KeycloakUserId))
         {
             _logger.LogWarning("Get current profile flow stopped because user is not authenticated");
-            return Error.Unauthorized("CurrentUser.Unauthenticated", "User is not authenticated.");
+            return Error.Unauthorized(IdentityErrorCodes.CurrentUserUnauthenticated, IdentityMessages.UserNotAuthenticated);
         }
 
         if (_currentUser.Roles.Contains(IdentityRoles.Donor))
@@ -53,7 +54,7 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
             if (donorProfile is null)
             {
                 _logger.LogWarning("Donor profile not found for KeycloakUserId {KeycloakUserId}", _currentUser.KeycloakUserId);
-                return Error.NotFound("Profile.NotFound", "Profile was not found.");
+                return Error.NotFound(IdentityErrorCodes.ProfileNotFound, IdentityMessages.ProfileNotFound);
             }
 
             PublishProfileViewedAudit(nameof(DonorProfile), donorProfile.Id, IdentityRoles.Donor);
@@ -78,7 +79,7 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
             if (managerProfile is null)
             {
                 _logger.LogWarning("Manager profile not found for KeycloakUserId {KeycloakUserId}", _currentUser.KeycloakUserId);
-                return Error.NotFound("Profile.NotFound", "Profile was not found.");
+                return Error.NotFound(IdentityErrorCodes.ProfileNotFound, IdentityMessages.ProfileNotFound);
             }
 
             PublishProfileViewedAudit(nameof(ManagerProfile), managerProfile.Id, IdentityRoles.Manager);
@@ -99,7 +100,7 @@ public sealed class GetMeQueryHandler : IQueryHandler<GetMeQuery, GetMeResponse>
             "Get current profile flow stopped because roles are not allowed. Roles: {Roles}",
             _currentUser.Roles);
 
-        return Error.Unauthorized("CurrentUser.RoleNotAllowed", "User role is not allowed.");
+        return Error.Unauthorized(IdentityErrorCodes.CurrentUserRoleNotAllowed, IdentityMessages.RoleNotAllowed);
     }
 
     private void PublishProfileViewedAudit(string entityName, Guid profileId, string actorType)

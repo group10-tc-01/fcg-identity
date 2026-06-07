@@ -1,4 +1,5 @@
 using Fcs.Identity.Domain.Shared.ValueObjects;
+using Fcs.Identity.Resources.Messages;
 using FluentValidation;
 
 namespace Fcs.Identity.Application.UseCases.Auth.Login;
@@ -9,12 +10,12 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
     {
         RuleFor(command => command.Email)
             .NotEmpty()
-            .WithMessage("Email is required.")
+            .WithMessage(IdentityMessages.EmailRequired)
             .Must(email => Email.Create(email).IsSuccess)
-            .WithMessage("Email is invalid.");
+            .WithMessage(IdentityMessages.EmailInvalid);
 
         RuleFor(command => command.Password)
             .NotEmpty()
-            .WithMessage("Password is required.");
+            .WithMessage(IdentityMessages.PasswordRequired);
     }
 }

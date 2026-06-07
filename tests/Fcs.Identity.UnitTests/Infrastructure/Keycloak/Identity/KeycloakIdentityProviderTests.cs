@@ -285,10 +285,12 @@ public sealed class KeycloakIdentityProviderTests
     public async Task Given_LoginAsync_Called_When_KeycloakReturnsToken_Then_ShouldReturnToken()
     {
         // Arrange
-        var keycloakApi = new FakeKeycloakApi();
-        keycloakApi.LoginTokenResponse = CreateApiResponse(
-            HttpStatusCode.OK,
-            new KeycloakTokenResponse(CreateJwt("keycloak-user-id", [IdentityRoles.Donor]), "refresh-token", 300, "Bearer"));
+        var keycloakApi = new FakeKeycloakApi
+        {
+            LoginTokenResponse = CreateApiResponse(
+                HttpStatusCode.OK,
+                new KeycloakTokenResponse(CreateJwt("keycloak-user-id", [IdentityRoles.Donor]), "refresh-token", 300, "Bearer"))
+        };
         var provider = CreateProvider(keycloakApi);
         var request = new LoginIdentityUserRequest("maria@email.com", "StrongPassword123!");
 

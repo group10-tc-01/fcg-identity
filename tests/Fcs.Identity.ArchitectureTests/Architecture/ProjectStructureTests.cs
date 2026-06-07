@@ -11,6 +11,7 @@ public class ProjectStructureTests
     {
         "src/Fcs.Identity.Application/Fcs.Identity.Application.csproj",
         "src/Fcs.Identity.Domain/Fcs.Identity.Domain.csproj",
+        "src/Fcs.Identity.Resources/Fcs.Identity.Resources.csproj",
         "src/Fcs.Identity.Infrastructure.Kafka/Fcs.Identity.Infrastructure.Kafka.csproj",
         "src/Fcs.Identity.Infrastructure.Keycloak/Fcs.Identity.Infrastructure.Keycloak.csproj",
         "src/Fcs.Identity.Infrastructure.SqlServer/Fcs.Identity.Infrastructure.SqlServer.csproj",
@@ -38,6 +39,7 @@ public class ProjectStructureTests
         var expectedProjectDirectories = new[]
         {
             "src/Fcs.Identity.Domain",
+            "src/Fcs.Identity.Resources",
             "src/Fcs.Identity.Application",
             "src/Fcs.Identity.Infrastructure.Kafka",
             "src/Fcs.Identity.Infrastructure.Keycloak",

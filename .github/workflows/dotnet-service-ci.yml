@@ -9,6 +9,7 @@ on:
       - Directory.Build.props
       - Directory.Packages.props
       - .editorconfig
+      - .gitleaks.toml
       - docker-compose.yml
       - .github/workflows/dotnet-service-ci.yml
   push:
@@ -19,6 +20,7 @@ on:
       - Directory.Build.props
       - Directory.Packages.props
       - .editorconfig
+      - .gitleaks.toml
       - docker-compose.yml
       - .github/workflows/dotnet-service-ci.yml
   workflow_dispatch:

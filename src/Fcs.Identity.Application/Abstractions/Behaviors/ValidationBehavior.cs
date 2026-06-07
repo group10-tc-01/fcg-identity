@@ -1,4 +1,5 @@
 using Fcs.Identity.Domain.Shared.Results;
+using Fcs.Identity.Resources.Messages;
 using FluentValidation;
 using MediatR;
 
@@ -37,7 +38,7 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
         }
 
         var message = string.Join("; ", failures.Select(failure => failure.ErrorMessage));
-        var error = Error.Validation("Validation.Failed", message);
+        var error = Error.Validation(IdentityErrorCodes.ValidationFailed, message);
 
         return CreateValidationResult<TResponse>(error);
     }

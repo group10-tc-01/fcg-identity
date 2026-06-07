@@ -1,0 +1,7 @@
+title = "Fcs.Identity Gitleaks configuration"
+
+[[allowlists]]
+description = "Swagger response examples use static placeholder values and may match generic secret heuristics."
+paths = [
+  '''src/Fcs.Identity.WebApi/Swagger/SwaggerExamples.cs''',
+]
