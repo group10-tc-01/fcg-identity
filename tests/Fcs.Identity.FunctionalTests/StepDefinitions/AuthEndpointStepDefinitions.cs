@@ -180,7 +180,7 @@ public sealed class AuthEndpointStepDefinitions
     [Then("a resposta deve conter o token de acesso")]
     public async Task Then_ARespostaDeveConterOTokenDeAcesso()
     {
-        var payload = await ReadResponseAsync<AuthSessionResponse>();
+        var payload = await ReadResponseAsync<LoginResponse>();
 
         payload.Data.Should().NotBeNull();
         payload.Data!.AccessToken.Should().Be("access-token");
@@ -193,7 +193,7 @@ public sealed class AuthEndpointStepDefinitions
     [Then("a resposta deve conter o novo token de acesso")]
     public async Task Then_ARespostaDeveConterONovoTokenDeAcesso()
     {
-        var payload = await ReadResponseAsync<AuthSessionResponse>();
+        var payload = await ReadResponseAsync<LoginResponse>();
 
         payload.Data.Should().NotBeNull();
         payload.Data!.AccessToken.Should().Be("new-access-token");

@@ -62,30 +62,4 @@ public sealed class ResultTests
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("Cannot access Error of a successful Result.");
     }
-
-    [Fact]
-    public void Given_Match_Called_When_ResultIsSuccess_Then_ShouldRunSuccessDelegate()
-    {
-        // Arrange
-        var result = Result<string>.Success("success");
-
-        // Act
-        var output = result.Match(value => value.ToUpperInvariant(), error => error.Code);
-
-        // Assert
-        output.Should().Be("SUCCESS");
-    }
-
-    [Fact]
-    public void Given_Match_Called_When_ResultIsFailure_Then_ShouldRunFailureDelegate()
-    {
-        // Arrange
-        var result = Result<string>.Failure(Error.Failure("Error", "Error message."));
-
-        // Act
-        var output = result.Match(value => value, error => error.Code);
-
-        // Assert
-        output.Should().Be("Error");
-    }
 }

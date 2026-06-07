@@ -149,7 +149,7 @@ public sealed class AuthControllerTests : IAsyncLifetime
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/v1/auth/login", command);
-        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<AuthSessionResponse>>();
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -211,7 +211,7 @@ public sealed class AuthControllerTests : IAsyncLifetime
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", command);
-        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<AuthSessionResponse>>();
+        var payload = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
